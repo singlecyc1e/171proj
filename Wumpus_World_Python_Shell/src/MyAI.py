@@ -49,7 +49,7 @@ class MyAI ( Agent ):
         # ======================================================================
         # YOUR CODE BEGINS
         # ======================================================================
-        print(stench, breeze, glitter, bump)
+        ##print(stench, breeze, glitter, bump)
         
         if (not bump) and (not stench)and (not breeze):
             if self.__myPosition not in self.__traveledplace:
@@ -96,10 +96,10 @@ class MyAI ( Agent ):
             MyAI.changeBreezeValue(self)
             self.__breezeplaces.append((self.__myPosition[0],self.__myPosition[1]))
     
-        print(self.__myPosition)
-        print(self.__Fplace)
-        for i in self.__Maps:
-            print(i)
+        ##print(self.__myPosition)
+        ##print(self.__Fplace)
+        ##for i in self.__Maps:
+            ##print(i)
         
         # if there is gold, grab it and add it to the actions stack
         if glitter:
@@ -115,7 +115,7 @@ class MyAI ( Agent ):
         # if not grabbed, calculate next move
         if not self.__grabbed:
             Possiblemoves = MyAI.getPossibleMoves(self)
-            print(Possiblemoves)
+            ##print(Possiblemoves)
             NextBestSpot = sorted(Possiblemoves, key = lambda x: self.__Maps[x[0]][x[1]], reverse = True)[0]
             if MyAI.nextForwardPosition(self) == NextBestSpot:
                 self.__actions.append(Agent.Action.FORWARD)
