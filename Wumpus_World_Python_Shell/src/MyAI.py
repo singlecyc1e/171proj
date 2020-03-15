@@ -114,7 +114,7 @@ class MyAI ( Agent ):
         # if not grabbed, calculate next move
         if not self.__grabbed:
             Possiblemoves = MyAI.getPossibleMoves(self)
-            print(Possiblemoves)
+            #print(Possiblemoves)
             NextBestSpot = sorted(Possiblemoves, key = lambda x: self.__Maps[x[0]][x[1]][0], reverse = True)[0]
             if MyAI.nextForwardPosition(self) == NextBestSpot:
                 self.__actions.append(Agent.Action.FORWARD)
@@ -213,7 +213,12 @@ class MyAI ( Agent ):
         for i in final:
             if (self.__Maps[i[0]][i[1]][2] == False):
                 finalmoves.append(i)
-        return finalmoves
+
+        last = list()
+        for i in finalmoves:
+            if i not in self.__walls:
+                last.append(i)
+        return last
 
     def nextForwardPosition(self):
         if self.__myDirection == 0:
