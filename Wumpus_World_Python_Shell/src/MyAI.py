@@ -53,10 +53,10 @@ class MyAI ( Agent ):
         # ======================================================================
         # YOUR CODE BEGINS
         # ======================================================================
-        print(stench, breeze, glitter, bump)
-        print(self.__shooted)
-        print(self.__lastspot)
-        print(self.__myPosition)
+        #print(stench, breeze, glitter, bump)
+        #print(self.__shooted)
+        #print(self.__lastspot)
+        #print(self.__myPosition)
             
         if (self.__myPosition == (0,0)) and (breeze == True):
             return Agent.Action.CLIMB
@@ -109,7 +109,7 @@ class MyAI ( Agent ):
         # if not grabbed, calculate next move
         if not self.__grabbed:
             Possiblemoves = MyAI.getPossibleMoves(self)
-            print(Possiblemoves)
+            #print(Possiblemoves)
             NextBestSpot = sorted(Possiblemoves, key = lambda x: self.__Maps[x[0]][x[1]][0], reverse = True)[0]
             if MyAI.nextForwardPosition(self) == NextBestSpot:
                 self.__actions.append(Agent.Action.FORWARD)
