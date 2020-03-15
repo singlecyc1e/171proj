@@ -99,7 +99,7 @@ class MyAI ( Agent ):
             return Agent.Action.GRAB
 
         for position in self.__traveledplace:
-            if self.__traveledplace.count(position) >= 10:
+            if self.__traveledplace.count(position) >= 6:
                 self.__grabbed = True
                 
         
