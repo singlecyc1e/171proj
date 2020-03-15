@@ -37,7 +37,6 @@ class MyAI ( Agent ):
         self.__traveledplace = list()
         self.__walls = list()
         self.__timesInStart = 0
-        self.__Fplace = list()
         self.__lastspot = (-1,-1)
         self.__shootPlaces = list()
 
@@ -102,7 +101,7 @@ class MyAI ( Agent ):
             return Agent.Action.GRAB
 
         for position in self.__traveledplace:
-            if self.__traveledplace.count(position) >= 15:
+            if self.__traveledplace.count(position) >= 10:
                 self.__grabbed = True
                 
         
