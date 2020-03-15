@@ -69,7 +69,7 @@ class MyAI ( Agent ):
 
         if self.__myPosition == (0,0):
             self.__timesInStart += 1
-        if self.__timesInStart >= 6:
+        if self.__timesInStart >= 4:
             return Agent.Action.CLIMB
 
         ##breeze condition
@@ -97,7 +97,7 @@ class MyAI ( Agent ):
             return Agent.Action.GRAB
 
         for position in self.__traveledplace:
-            if self.__traveledplace.count(position) >= 25:
+            if self.__traveledplace.count(position) >= 20:
                 self.__grabbed = True
                 
         
