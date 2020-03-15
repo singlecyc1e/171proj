@@ -20,372 +20,120 @@
 from Agent import Agent
 
 
-class MyAI ( Agent ):
+class MyAI (Agent):
 
-    def __init__ ( self ):
-        # ======================================================================
-        # YOUR CODE BEGINS
-        # ======================================================================
+    def __init__(self):
         self.__grabbed = False
-        self.__actions = list()
-        self.__turnedHEAD = False
-        self.__turningCounter = 0
-        self.__shooted = False
-        self.__Maps = [[(1000, 0, 0) for k in range(5)] for i in range(8) ] ##0 means unknown, first is heruistic value, sec is pit, third is wumpus
-        self.__myPosition = (0,0)
-        self.__myDirection = 1 ##0 is up, 1 is right, 2 is down, 3 is left
-        self.__traveledplace = list()
-        self.__walls = list()
-        self.__timesInStart = 0
-        self.__lastspot = (-1,-1)
-        self.__shootPlaces = list()
+        self.update = False
+        self.tgt_down = False
+        self.hasArrow = True
+        self.upBound = 10000
+        self.rightBound = 10000
+        self.stack = []
+        self.visited = [(0, 0)]
+        self.status = {"Direction": (1, 0), "Location": (0, 0)}
+        self.bump = False
 
-        for i in range(8):
-            self.__walls.append((i,-1))
-        for i in range(5):
-            self.__walls.append((-1,i))   
-        # ======================================================================
-        # YOUR CODE ENDS
-        # ======================================================================
+    #Return available cells around current
+    def adjacentCellsBefore(self, stench, breeze):
+        cells = list()
+        if stench or breeze:
+            return cells
+        x, y = self.status["Location"]
+        if x - 1 >= 0 and (x-1, y) not in self.visited:
+            cells.append((x-1, y))
+        if x + 1 <= self.rightBound and (x+1, y) not in self.visited:
+            cells.append((x+1, y))
+        if y - 1 >= 0 and (x, y-1) not in self.visited:
+            cells.append((x, y-1))
+        if y + 1 <= self.upBound and (x, y+1) not in self.visited:
+            cells.append((x, y+1))
+        return cells
 
-    def getAction( self, stench, breeze, glitter, bump, scream ):
-        # ======================================================================
-        # YOUR CODE BEGINS
-        # ======================================================================
-        #print(stench, breeze, glitter, bump)
-        #print(self.__shooted)
-        #print(self.__lastspot)
-        #print(self.__myPosition)
-            
-        if (self.__myPosition == (0,0)) and (breeze == True):
-            return Agent.Action.CLIMB
-        
-        if bump:
-            self.__actions.pop()
-            self.__myPosition = self.__lastspot
-            spot = MyAI.nextForwardPosition(self)
-            MyAI.WallsAdded(self,spot)
-            
-        self.__traveledplace.append(self.__myPosition)
-
-        self.__Maps[self.__myPosition[0]][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]][0]-1,self.__Maps[self.__myPosition[0]][self.__myPosition[1]][1],self.__Maps[self.__myPosition[0]][self.__myPosition[1]][2])
-
-        if self.__myPosition == (0,0):
-            self.__timesInStart += 1
-        if self.__timesInStart >= 4:
-            return Agent.Action.CLIMB
-
-        ##breeze condition
+    def adjacentCellsAfter(self, breeze):
+        cells = list()
         if breeze:
-            if (self.__lastspot != self.__myPosition):
-                MyAI.changeBreezeValue(self)
-        else:
-            MyAI.UpdateBreeze(self)
+            return cells
+        x, y = self.status["Location"]
+        if x - 1 >= 0 and (x-1, y) not in self.visited:
+            cells.append((x-1, y))
+        if x + 1 <= self.rightBound and (x+1, y) not in self.visited:
+            cells.append((x+1, y))
+        if y - 1 >= 0 and (x, y-1) not in self.visited:
+            cells.append((x, y-1))
+        if y + 1 <= self.upBound and (x, y+1) not in self.visited:
+            cells.append((x, y+1))
+        return cells
 
-        ##stench condition    
-        if stench:
-            nextspot = MyAI.nextForwardPosition(self)
-            if (self.__shooted == False) and (nextspot not in self.__walls):
-                self.__shooted = True
-                MyAI.UpdateShootFlag(self)
-                return Agent.Action.SHOOT
-            if (self.__lastspot != self.__myPosition):
-                MyAI.changeStenchValue(self)
+    #Set right bound or up bound when perceiving bump
+    def setBound(self):
+        curr_dir, loc = self.status["Direction"], self.status["Location"]
+        if curr_dir == (1, 0):
+            self.rightBound = loc[0] - 1
+            self.status["Location"] = (loc[0] - 1, loc[1])
+        elif curr_dir == (0, 1):
+            self.upBound = loc[1] - 1
+            self.status["Location"] = (loc[0], loc[1] - 1)
+
+    def toCell(self, tgt: tuple):
+        curr_dir, loc = self.status["Direction"], self.status["Location"]
+        tgt_dir = (tgt[0]-loc[0], tgt[1]-loc[1])
+
+        if tgt_dir == curr_dir:
+            if tgt in self.stack:
+                self.status["Location"] = tgt
+                self.stack.pop()
+            else:
+                self.stack.append(self.status["Location"])
+                self.status["Location"] = tgt
+                self.visited.append(tgt)
+            return Agent.Action.FORWARD
+
+        elif tgt_dir[0] == curr_dir[0] or tgt_dir[1] == curr_dir[1]:
+            if curr_dir[0] == 0:
+                self.status["Direction"] = (-1*curr_dir[1], 0)
+                return Agent.Action.TURN_LEFT
+            elif curr_dir[1] == 0:
+                self.status["Direction"] = (0, curr_dir[0])
+                return Agent.Action.TURN_LEFT
         else:
-            MyAI.UpdateStunch(self)
-        
-        # if there is gold, grab it and add it to the actions stack
+            if curr_dir[0] == 0 and curr_dir[1] == tgt_dir[0]:
+                self.status["Direction"] = tgt_dir
+                return Agent.Action.TURN_RIGHT
+            elif curr_dir[0] == 0 and curr_dir[1] != tgt_dir[0]:
+                self.status["Direction"] = tgt_dir
+                return Agent.Action.TURN_LEFT
+            elif curr_dir[1] == 0 and curr_dir[0] == tgt_dir[1]:
+                self.status["Direction"] = tgt_dir
+                return Agent.Action.TURN_LEFT
+            elif curr_dir[1] == 0 and curr_dir[0] != tgt_dir[1]:
+                self.status["Direction"] = tgt_dir
+                return Agent.Action.TURN_RIGHT
+
+    def getAction(self, stench, breeze, glitter, bump, scream):
+
         if glitter:
             self.__grabbed = True
-            self.__actions.append(Agent.Action.GRAB)
             return Agent.Action.GRAB
 
-        for position in self.__traveledplace:
-            if self.__traveledplace.count(position) >= 10:
-                self.__grabbed = True
-                
+        if bump:
+            self.stack.pop()
+            self.setBound()
         
-        # if not grabbed, calculate next move
-        if not self.__grabbed:
-            Possiblemoves = MyAI.getPossibleMoves(self)
-            #print(Possiblemoves)
-            NextBestSpot = sorted(Possiblemoves, key = lambda x: self.__Maps[x[0]][x[1]][0], reverse = True)[0]
-            if MyAI.nextForwardPosition(self) == NextBestSpot:
-                self.__actions.append(Agent.Action.FORWARD)
-                self.__lastspot = self.__myPosition
-                self.__myPosition = NextBestSpot
-                return Agent.Action.FORWARD
-            elif MyAI.nextRightPosition(self) == NextBestSpot:
-                self.__myDirection = (self.__myDirection + 1) % 4
-                self.__actions.append(Agent.Action.TURN_RIGHT)
-                self.__lastspot = self.__myPosition
-                return Agent.Action.TURN_RIGHT
-            else:
-                self.__myDirection = (self.__myDirection + 3 ) % 4
-                self.__actions.append(Agent.Action.TURN_LEFT)
-                self.__lastspot = self.__myPosition
-                return Agent.Action.TURN_LEFT
+        if stench and self.hasArrow == True and self.__grabbed == False:
+            self.hasArrow = False
+            return Agent.Action.SHOOT
         
-        # if grabbed, then return to start
-        if self.__grabbed:
-            if self.__myPosition == (0,0):
+        if scream or self.tgt_down:
+            self.tgt_down = True
+            adj_cells = self.adjacentCellsAfter(breeze)
+        
+        else:
+            adj_cells = self.adjacentCellsBefore(stench,breeze)
+
+        if self.__grabbed or not adj_cells:
+            if not self.stack:
                 return Agent.Action.CLIMB
-            ## if actions stack is empty, then climb out
-            if self.__actions == list():
-                return Agent.Action.CLIMB
-
-            ## check what is the last action
-            lastAction = self.__actions.pop()
-
-            if lastAction == Agent.Action.FORWARD:
-                if self.__turnedHEAD:
-                    return lastAction
-                
-                if self.__turningCounter == 1:
-                    self.__turnedHEAD = True
-                    self.__turningCounter = 0
-                    self.__actions.append(lastAction)
-                    return Agent.Action.TURN_LEFT
-                
-                self.__myDirection = (self.__myDirection + 3 ) % 4
-                self.__actions.append(lastAction)
-                self.__turningCounter += 1
-                
-                return Agent.Action.TURN_LEFT
-
-            if lastAction == Agent.Action.TURN_LEFT:
-                self.__myDirection = (self.__myDirection + 1 ) % 4
-                return Agent.Action.TURN_RIGHT
-
-            if lastAction == Agent.Action.TURN_RIGHT:
-                self.__myDirection = (self.__myDirection + 3 ) % 4
-                return Agent.Action.TURN_LEFT
+            return self.toCell(self.stack[-1])
         
-        return Agent.Action.CLIMB
-        # ======================================================================
-        # YOUR CODE ENDS
-        # ======================================================================
-    
-    # ======================================================================
-    # YOUR CODE BEGINS
-    # ======================================================================
-    def getPossibleMoves(self):
-        moves = list()
-        row = self.__myPosition[0]
-        col = self.__myPosition[1]
-        ##col moves
-        if (col<=0):
-            moves.append((row,col+1))
-        elif (col>0 and col<3):
-            moves.append((row,col+1))
-            moves.append((row,col-1))
-        elif (col>=3):
-            moves.append((row,col-1))
-        #row moves
-        if (row<=0):
-            moves.append((row+1,col))
-        elif (row>0 and row<7):
-            moves.append((row+1,col))
-            moves.append((row-1,col))
-        elif (row>=7):
-            moves.append((row-1,col))
-            
-        final = list()
-        for i in moves:
-            ##if flag breeze is false then append it
-            if (self.__Maps[i[0]][i[1]][1] == False):
-                final.append(i)
-            if (self.__Maps[i[0]][i[1]][1] == True) and (i in self.__traveledplace):
-                final.append(i)
-
-        finalmoves = list()
-        for i in final:
-            if (self.__Maps[i[0]][i[1]][2] == False):
-                finalmoves.append(i)
-            if (self.__Maps[i[0]][i[1]][2] == True) and ((i in self.__shootPlaces) or (i in self.__traveledplace)):
-                finalmoves.append(i)
-                
-        last = list()
-        for i in finalmoves:
-            if i not in self.__walls:
-                last.append(i)
-        return last
-
-    def nextForwardPosition(self):
-        if self.__myDirection == 0:
-            return (self.__myPosition[0]+1,self.__myPosition[1])
-        if self.__myDirection == 1:
-            return (self.__myPosition[0],self.__myPosition[1]+1)
-        if self.__myDirection == 2:
-            return (self.__myPosition[0]-1,self.__myPosition[1])
-        if self.__myDirection == 3:
-            return (self.__myPosition[0],self.__myPosition[1]-1)
-
-    def nextRightPosition(self):
-        if self.__myDirection == 0:
-            return (self.__myPosition[0],self.__myPosition[1]+1)
-        if self.__myDirection == 1:
-            return (self.__myPosition[0]-1,self.__myPosition[1])
-        if self.__myDirection == 2:
-            return (self.__myPosition[0],self.__myPosition[1]-1)
-        if self.__myDirection == 3:
-            return (self.__myPosition[0]+1,self.__myPosition[1])
-
-    def changeBreezeValue(self):
-        ##when face forward
-        if self.__myDirection == 0:
-            self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
-            if self.__myPosition[1] <= 0:
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
-            if self.__myPosition[1] >= 3:
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][2])
-            if self.__myPosition[1] > 0 and self.__myPosition[1] < 3:
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][2])
-
-        ##when face right    
-        elif self.__myDirection == 1:
-            self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
-            if self.__myPosition[0] <= 0:
-                self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
-            if self.__myPosition[0] >= 6:
-                self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][2])
-            if self.__myPosition[0] > 0 and self.__myPosition[0] < 6:
-                self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
-                self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][2])
-
-        ##when face down         
-        elif self.__myDirection == 2:
-            if self.__myPosition[0]>= 1:
-                self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][2])
-            if self.__myPosition[1] <= 0:
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
-            if self.__myPosition[1] > 0:
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][2])
-
-        ##when face left          
-        elif self.__myDirection == 3:
-            if self.__myPosition[1]>= 1:
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][2])
-            if self.__myPosition[0] <= 0:
-                self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
-            if self.__myPosition[0] > 0:
-                self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
-                self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][2])
-
-        #self.__Fplace = [i for i in self.__Fplace if i not in self.__traveledplace]
-        
-
-    def changeStenchValue(self):
-        ##when face forward
-        if self.__myDirection == 0:
-            self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][1],True)
-            if self.__myPosition[1] <= 0:
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][1],True)
-            if self.__myPosition[1] >= 3:
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][1],True)
-            if self.__myPosition[1] > 0 and self.__myPosition[1] < 3:
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][1],True)
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][1],True)
-
-        ##when face right     
-        elif self.__myDirection == 1:
-            self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][1],True)
-            if self.__myPosition[0] <= 0:
-                self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][1],True)
-            if self.__myPosition[0] > 0:
-                self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][1],True)
-                self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][1],True)
-
-        ##when face down         
-        elif self.__myDirection == 2:
-            self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][1],True)
-            if self.__myPosition[0]>= 1:
-                self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][1],True)
-            if self.__myPosition[1] > 0:
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][1],True)
-
-        ##when face left          
-        elif self.__myDirection == 3:
-            self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][1],True)
-            if self.__myPosition[1]>= 1:
-                self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][1],True)
-            if self.__myPosition[0] > 0:
-                self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][1],True)
-
-
-
-    #cleanBreezeFlag
-    def UpdateBreeze(self):
-        if self.__myPosition[0]== 0:
-            self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],False,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
-        else:
-            self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],False,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
-            self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],False,self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][2])
-
-        if self.__myPosition[1]== 0:
-            self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],False,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
-        else:
-            self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],False,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
-            self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],False,self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][2])
-
-    #cleanStunchFlag
-    def UpdateStunch(self):
-        if self.__myPosition[0]== 0:
-            self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][1],False)
-        else:
-            self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][1],False)
-            self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][1],False)
-
-        if self.__myPosition[1]== 0:
-            self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][1],False)
-        else:
-            self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][1],False)
-            self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][1],False)
-
-    def UpdateShootFlag(self):
-        
-        x = self.__myPosition[0]
-        y = self.__myPosition[1]
-        ##when face forward
-        if self.__myDirection == 0:
-            for i in range(x,7):
-                self.__shootPlaces.append((i+1,y))
-
-        ##when face right     
-        elif self.__myDirection == 1:
-            for i in range(y,5):
-                self.__shootPlaces.append((x,i+1))
-
-        ##when face down         
-        elif self.__myDirection == 2:
-            for i in range(0,x):
-                self.__shootPlaces.append((i,y))
-
-        ##when face left          
-        elif self.__myDirection == 3:
-            for i in range(0,y):
-                self.__shootPlaces.append((x,i))
-
-    def WallsAdded(self,spot):
-        x = spot[0]
-        y = spot[1]
-        ##when face forward
-        if self.__myDirection == 0:
-            for i in range(5):
-                self.__walls.append((x,i))
-
-
-        ##when face right     
-        elif self.__myDirection == 1:
-            for i in range(8):
-                self.__walls.append((i,y))
-
-    
-    def p(self):
-        print(self.__newMaps)
-
-    # ======================================================================
-    # YOUR CODE ENDS
-    # ======================================================================
+        return self.toCell(adj_cells[0])
