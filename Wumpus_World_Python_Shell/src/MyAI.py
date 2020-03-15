@@ -31,16 +31,14 @@ class MyAI ( Agent ):
         self.__turnedHEAD = False
         self.__turningCounter = 0
         self.__shooted = False
-        self.__Maps = [[1000 for k in range(5)] for i in range(8) ]
-        self.__Maps[0][0] = 1000
+        self.__Maps = [[(1000, 0, 0) for k in range(5)] for i in range(8) ] ##0 means unknown, first is heruistic value, sec is pit, third is wumpus
         self.__myPosition = (0,0)
         self.__myDirection = 1 ##0 is up, 1 is right, 2 is down, 3 is left
         self.__traveledplace = list()
         self.__walls = list()
-        self.__breezeplaces = list()
-        self.__stenchplaces = list()
         self.__timesInStart = 0
         self.__Fplace = list()
+        self.__lastspot = (-1,-1)
         # ======================================================================
         # YOUR CODE ENDS
         # ======================================================================
@@ -49,12 +47,13 @@ class MyAI ( Agent ):
         # ======================================================================
         # YOUR CODE BEGINS
         # ======================================================================
-        ##print(stench, breeze, glitter, bump)
+        print(stench, breeze, glitter, bump)
+        print(self.__lastspot)
+        print(self.__myPosition)
         
         if (not bump) and (not stench)and (not breeze):
             if self.__myPosition not in self.__traveledplace:
                 self.__traveledplace.append(self.__myPosition)
-                MyAI.changeEmptyValue(self)
                 
         if (scream) and (not breeze):
             nextmove = MyAI.nextForwardPosition(self)
@@ -79,27 +78,26 @@ class MyAI ( Agent ):
 
         self.__traveledplace.append(self.__myPosition)
 
-        self.__Maps[self.__myPosition[0]][self.__myPosition[1]] -= 1
+        self.__Maps[self.__myPosition[0]][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]][0]-1,self.__Maps[self.__myPosition[0]][self.__myPosition[1]][1],self.__Maps[self.__myPosition[0]][self.__myPosition[1]][2])
 
         if self.__myPosition == (0,0):
             self.__timesInStart += 1
         if self.__timesInStart >= 7:
             return Agent.Action.CLIMB
-            
+
+        ##breeze condition
         if breeze:
-            self.__Maps[self.__myPosition[0]][self.__myPosition[1]] = -1000
-            MyAI.changeBreezeValue(self)
-            self.__breezeplaces.append((self.__myPosition[0],self.__myPosition[1]))
-            
+            if (self.__lastspot != self.__myPosition):
+                MyAI.changeBreezeValue(self)
+        else:
+            MyAI.UpdateBreeze(self)
+
+        ##stench condition    
         if stench:
-            self.__Maps[self.__myPosition[0]][self.__myPosition[1]] = -1000
-            MyAI.changeBreezeValue(self)
-            self.__breezeplaces.append((self.__myPosition[0],self.__myPosition[1]))
-    
-        ##print(self.__myPosition)
-        ##print(self.__Fplace)
-        ##for i in self.__Maps:
-            ##print(i)
+            if (self.__lastspot != self.__myPosition):
+                MyAI.changeBreezeValue(self)
+        else:
+            MyAI.UpdateStunch(self)
         
         # if there is gold, grab it and add it to the actions stack
         if glitter:
@@ -115,8 +113,8 @@ class MyAI ( Agent ):
         # if not grabbed, calculate next move
         if not self.__grabbed:
             Possiblemoves = MyAI.getPossibleMoves(self)
-            ##print(Possiblemoves)
-            NextBestSpot = sorted(Possiblemoves, key = lambda x: self.__Maps[x[0]][x[1]], reverse = True)[0]
+            print(Possiblemoves)
+            NextBestSpot = sorted(Possiblemoves, key = lambda x: self.__Maps[x[0]][x[1]][0], reverse = True)[0]
             if MyAI.nextForwardPosition(self) == NextBestSpot:
                 self.__actions.append(Agent.Action.FORWARD)
                 self.__lastspot = self.__myPosition
@@ -125,10 +123,12 @@ class MyAI ( Agent ):
             elif MyAI.nextRightPosition(self) == NextBestSpot:
                 self.__myDirection = (self.__myDirection + 1) % 4
                 self.__actions.append(Agent.Action.TURN_RIGHT)
+                self.__lastspot = self.__myPosition
                 return Agent.Action.TURN_RIGHT
             else:
                 self.__myDirection = (self.__myDirection + 3 ) % 4
                 self.__actions.append(Agent.Action.TURN_LEFT)
+                self.__lastspot = self.__myPosition
                 return Agent.Action.TURN_LEFT
         
         # if grabbed, then return to start
@@ -202,8 +202,12 @@ class MyAI ( Agent ):
         elif (row>=7):
             if (row-1,col) not in self.__Fplace:
                 moves.append((row-1,col))
-            
-        return moves
+        final = list()
+        for i in moves:
+            ##if flag breeze is false then append it
+            if (self.__Maps[i[0]][i[1]][1] == False):
+                final.append(i)
+        return final
 
     def nextForwardPosition(self):
         if self.__myDirection == 0:
@@ -226,71 +230,49 @@ class MyAI ( Agent ):
             return (self.__myPosition[0]+1,self.__myPosition[1])
 
     def changeBreezeValue(self):
+        ##when face forward
         if self.__myDirection == 0:
-            if self.__myPosition[0]<= 5:
-                self.__Fplace.append((self.__myPosition[0]+1,self.__myPosition[1]))
-                #self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = -2000
+            self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
             if self.__myPosition[1] <= 0:
-                self.__Fplace.append((self.__myPosition[0],self.__myPosition[1]+1))
-                #self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = -2000
+                self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
             if self.__myPosition[1] >= 3:
-                self.__Fplace.append((self.__myPosition[0],self.__myPosition[1]-1))
-                #self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = -2000
+                self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][2])
             if self.__myPosition[1] > 0 and self.__myPosition[1] < 3:
-                #self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = -2000
-                #self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = -2000
-                self.__Fplace.append((self.__myPosition[0],self.__myPosition[1]+1))
-                self.__Fplace.append((self.__myPosition[0],self.__myPosition[1]-1))
-            
+                self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
+                self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][2])
+
+        ##when face right    
         elif self.__myDirection == 1:
-            if self.__myPosition[1]<= 2:
-                self.__Fplace.append((self.__myPosition[0],self.__myPosition[1]+1))
-                #self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = -2000
+            self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
             if self.__myPosition[0] <= 0:
-                self.__Fplace.append((self.__myPosition[0]+1,self.__myPosition[1]))
-                #self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = -2000
+                self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
             if self.__myPosition[0] >= 6:
-                self.__Fplace.append((self.__myPosition[0]-1,self.__myPosition[1]))
-                #self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = -2000
+                self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][2])
             if self.__myPosition[0] > 0 and self.__myPosition[0] < 6:
-                #self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = -2000
-                #self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = -2000
-                self.__Fplace.append((self.__myPosition[0]+1,self.__myPosition[1]))
-                self.__Fplace.append((self.__myPosition[0]-1,self.__myPosition[1]))
-                
+                self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
+                self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][2])
+
+        ##when face down         
         elif self.__myDirection == 2:
             if self.__myPosition[0]>= 1:
-                self.__Fplace.append((self.__myPosition[0]-1,self.__myPosition[1]))
-                #self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = -2000
+                self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][2])
             if self.__myPosition[1] <= 0:
-                self.__Fplace.append((self.__myPosition[0],self.__myPosition[1]+1))
-                #self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = -2000
-            if self.__myPosition[1] >= 3:
-                self.__Fplace.append((self.__myPosition[0],self.__myPosition[1]-1))
-                #self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = -2000
-            if self.__myPosition[1] > 0 and self.__myPosition[1] < 3:
-                self.__Fplace.append((self.__myPosition[0],self.__myPosition[1]+1))
-                self.__Fplace.append((self.__myPosition[0],self.__myPosition[1]-1))
-                #self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = -2000
-                #self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = -2000
-                
+                self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
+            if self.__myPosition[1] > 0:
+                self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
+                self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][2])
+
+        ##when face left          
         elif self.__myDirection == 3:
             if self.__myPosition[1]>= 1:
-                self.__Fplace.append((self.__myPosition[0],self.__myPosition[1]-1))
-                #self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = -2000
+                self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],True,self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][2])
             if self.__myPosition[0] <= 0:
-                self.__Fplace.append((self.__myPosition[0]+1,self.__myPosition[1]))
-                #self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = -2000
-            if self.__myPosition[0] >= 6:
-                self.__Fplace.append((self.__myPosition[0]-1,self.__myPosition[1]))
-                #self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = -2000
-            if self.__myPosition[0] > 0 and self.__myPosition[0] < 6:
-                self.__Fplace.append((self.__myPosition[0]+1,self.__myPosition[1]))
-                self.__Fplace.append((self.__myPosition[0]-1,self.__myPosition[1]))
-                #self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = -2000
-                #self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = -2000
+                self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
+            if self.__myPosition[0] > 0:
+                self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
+                self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],True,self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][2])
 
-        self.__Fplace = [i for i in self.__Fplace if i not in self.__traveledplace]
+        #self.__Fplace = [i for i in self.__Fplace if i not in self.__traveledplace]
         
 
     def changeStenchValue(self):
@@ -358,71 +340,39 @@ class MyAI ( Agent ):
                 self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = -1500
                 self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = -1500
 
-    def changeEmptyValue(self):
-        self.__Fplace = list(set(self.__Fplace))
-        if self.__myDirection == 0:
-            if self.__myPosition[0]<= 5:
-                if (self.__myPosition[0]+1,self.__myPosition[1]) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0]+1,self.__myPosition[1]))
-            if self.__myPosition[1] <= 0:
-                if (self.__myPosition[0],self.__myPosition[1]+1) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0],self.__myPosition[1]+1))
-            if self.__myPosition[1] >= 3:
-                if (self.__myPosition[0],self.__myPosition[1]-1) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0],self.__myPosition[1]-1))
-            if self.__myPosition[1] > 0 and self.__myPosition[1] < 3:
-                if (self.__myPosition[0],self.__myPosition[1]-1) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0],self.__myPosition[1]-1))
-                if (self.__myPosition[0],self.__myPosition[1]+1) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0],self.__myPosition[1]+1))
-            
-        elif self.__myDirection == 1:
-            if self.__myPosition[1]<= 2:
-                if (self.__myPosition[0],self.__myPosition[1]+1) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0],self.__myPosition[1]+1))
-            if self.__myPosition[0] <= 0:
-                if (self.__myPosition[0]+1,self.__myPosition[1]) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0]+1,self.__myPosition[1]))
-            if self.__myPosition[0] >= 6:
-                if (self.__myPosition[0]-1,self.__myPosition[1]) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0]-1,self.__myPosition[1]))
-            if self.__myPosition[0] > 0 and self.__myPosition[0] < 6:
-                if (self.__myPosition[0]+1,self.__myPosition[1]) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0]+1,self.__myPosition[1]))
-                if (self.__myPosition[0]-1,self.__myPosition[1]) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0]-1,self.__myPosition[1]))
-            
-        elif self.__myDirection == 2:
-            if self.__myPosition[0]>= 1:
-                if (self.__myPosition[0]-1,self.__myPosition[1]) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0]-1,self.__myPosition[1]))
-            if self.__myPosition[1] <= 0:
-                if (self.__myPosition[0],self.__myPosition[1]+1) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0],self.__myPosition[1]+1))
-            if self.__myPosition[1] >= 3:
-                if (self.__myPosition[0],self.__myPosition[1]-1) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0],self.__myPosition[1]-1))
-            if self.__myPosition[1] > 0 and self.__myPosition[1] < 3:
-                if (self.__myPosition[0],self.__myPosition[1]+1) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0],self.__myPosition[1]+1))
-                if (self.__myPosition[0],self.__myPosition[1]-1) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0],self.__myPosition[1]-1))
-                
-        elif self.__myDirection == 3:
-            if self.__myPosition[1]>= 1:
-                if (self.__myPosition[0],self.__myPosition[1]-1) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0],self.__myPosition[1]-1))
-            if self.__myPosition[0] <= 0:
-                if (self.__myPosition[0]+1,self.__myPosition[1]) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0]+1,self.__myPosition[1]))
-            if self.__myPosition[0] >= 6:
-                if (self.__myPosition[0]-1,self.__myPosition[1]) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0]-1,self.__myPosition[1]))
-            if self.__myPosition[0] > 0 and self.__myPosition[0] < 6:
-                if (self.__myPosition[0]+1,self.__myPosition[1]) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0]+1,self.__myPosition[1]))
-                if (self.__myPosition[0]-1,self.__myPosition[1]) in self.__Fplace:
-                    self.__Fplace.remove((self.__myPosition[0]-1,self.__myPosition[1]))
+
+
+    #cleanBreezeFlag
+    def UpdateBreeze(self):
+        if self.__myPosition[0]== 0:
+            self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],False,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
+        else:
+            self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],False,self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][2])
+            self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],False,self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][2])
+
+        if self.__myPosition[1]== 0:
+            self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],False,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
+        else:
+            self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],False,self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][2])
+            self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],False,self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][2])
+
+    #cleanStunchFlag
+    def UpdateStunch(self):
+        if self.__myPosition[0]== 0:
+            self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][1],False)
+        else:
+            self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][0],self.__Maps[self.__myPosition[0]+1][self.__myPosition[1]][1],False)
+            self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][0],self.__Maps[self.__myPosition[0]-1][self.__myPosition[1]][1],False)
+
+        if self.__myPosition[1]== 0:
+            self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][1],False)
+        else:
+            self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][1],False)
+            self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][1],False)
+
+    
+    def p(self):
+        print(self.__newMaps)
 
     # ======================================================================
     # YOUR CODE ENDS
