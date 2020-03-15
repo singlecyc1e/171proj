@@ -39,6 +39,7 @@ class MyAI ( Agent ):
         self.__timesInStart = 0
         self.__Fplace = list()
         self.__lastspot = (-1,-1)
+        self.__shootPlaces = list()
         # ======================================================================
         # YOUR CODE ENDS
         # ======================================================================
@@ -47,15 +48,12 @@ class MyAI ( Agent ):
         # ======================================================================
         # YOUR CODE BEGINS
         # ======================================================================
-        #print(stench, breeze, glitter, bump)
-        #print(self.__shooted)
-        #print(self.__lastspot)
-        #print(self.__myPosition)
+        print(stench, breeze, glitter, bump)
+        print(self.__shooted)
+        print(self.__lastspot)
+        print(self.__myPosition)
             
         if (self.__myPosition == (0,0)) and (breeze == True):
-            return Agent.Action.CLIMB
-
-        if (self.__myPosition == (0,0) )and (stench) and  (self.__shooted == True):
             return Agent.Action.CLIMB
         
         if bump:
@@ -72,7 +70,7 @@ class MyAI ( Agent ):
 
         if self.__myPosition == (0,0):
             self.__timesInStart += 1
-        if self.__timesInStart >= 7:
+        if self.__timesInStart >= 6:
             return Agent.Action.CLIMB
 
         ##breeze condition
@@ -86,6 +84,7 @@ class MyAI ( Agent ):
         if stench:
             if (self.__shooted == False):
                 self.__shooted = True
+                MyAI.UpdateShootFlag(self)
                 return Agent.Action.SHOOT
             if (self.__lastspot != self.__myPosition):
                 MyAI.changeStenchValue(self)
@@ -99,14 +98,14 @@ class MyAI ( Agent ):
             return Agent.Action.GRAB
 
         for position in self.__traveledplace:
-            if self.__traveledplace.count(position) >= 15:
+            if self.__traveledplace.count(position) >= 10:
                 self.__grabbed = True
                 
         
         # if not grabbed, calculate next move
         if not self.__grabbed:
             Possiblemoves = MyAI.getPossibleMoves(self)
-            #print(Possiblemoves)
+            print(Possiblemoves)
             NextBestSpot = sorted(Possiblemoves, key = lambda x: self.__Maps[x[0]][x[1]][0], reverse = True)[0]
             if MyAI.nextForwardPosition(self) == NextBestSpot:
                 self.__actions.append(Agent.Action.FORWARD)
@@ -200,12 +199,16 @@ class MyAI ( Agent ):
             ##if flag breeze is false then append it
             if (self.__Maps[i[0]][i[1]][1] == False):
                 final.append(i)
+            if (self.__Maps[i[0]][i[1]][1] == True) and (i in self.__traveledplace):
+                final.append(i)
 
         finalmoves = list()
         for i in final:
             if (self.__Maps[i[0]][i[1]][2] == False):
                 finalmoves.append(i)
-
+            if (self.__Maps[i[0]][i[1]][2] == True) and ((i in self.__shootPlaces) or (i in self.__traveledplace)):
+                finalmoves.append(i)
+                
         last = list()
         for i in finalmoves:
             if i not in self.__walls:
@@ -345,6 +348,29 @@ class MyAI ( Agent ):
             self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]+1][1],False)
             self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][0],self.__Maps[self.__myPosition[0]][self.__myPosition[1]-1][1],False)
 
+    def UpdateShootFlag(self):
+        
+        x = self.__myPosition[0]
+        y = self.__myPosition[1]
+        ##when face forward
+        if self.__myDirection == 0:
+            for i in range(x,7):
+                self.__shootPlaces.append((i+1,y))
+
+        ##when face right     
+        elif self.__myDirection == 1:
+            for i in range(y,5):
+                self.__shootPlaces.append((x,i+1))
+
+        ##when face down         
+        elif self.__myDirection == 2:
+            for i in range(0,x):
+                self.__shootPlaces.append((i,y))
+
+        ##when face left          
+        elif self.__myDirection == 3:
+            for i in range(0,y):
+                self.__shootPlaces.append((x,i))
     
     def p(self):
         print(self.__newMaps)
