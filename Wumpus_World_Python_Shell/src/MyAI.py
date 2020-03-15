@@ -73,7 +73,7 @@ class MyAI ( Agent ):
 
         if self.__myPosition == (0,0):
             self.__timesInStart += 1
-        if self.__timesInStart >= 6:
+        if self.__timesInStart >= 7:
             return Agent.Action.CLIMB
 
         ##breeze condition
