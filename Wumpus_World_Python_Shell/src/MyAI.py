@@ -40,6 +40,11 @@ class MyAI ( Agent ):
         self.__Fplace = list()
         self.__lastspot = (-1,-1)
         self.__shootPlaces = list()
+
+        for i in range(8):
+            self.__walls.append((i,-1))
+        for i in range(5):
+            self.__walls.append((-1,i))   
         # ======================================================================
         # YOUR CODE ENDS
         # ======================================================================
@@ -80,7 +85,8 @@ class MyAI ( Agent ):
 
         ##stench condition    
         if stench:
-            if (self.__shooted == False):
+            nextspot = MyAI.nextForwardPosition(self)
+            if (self.__shooted == False) and (nextspot not in self.__walls):
                 self.__shooted = True
                 MyAI.UpdateShootFlag(self)
                 return Agent.Action.SHOOT
