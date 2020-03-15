@@ -63,8 +63,7 @@ class MyAI ( Agent ):
             self.__walls.append(spot)
             self.__Fplace.append(spot)
             
-        if self.__myPosition not in self.__traveledplace:
-            self.__traveledplace.append(self.__myPosition)
+        self.__traveledplace.append(self.__myPosition)
 
         self.__Maps[self.__myPosition[0]][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]][0]-1,self.__Maps[self.__myPosition[0]][self.__myPosition[1]][1],self.__Maps[self.__myPosition[0]][self.__myPosition[1]][2])
 
