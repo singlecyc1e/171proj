@@ -60,8 +60,7 @@ class MyAI ( Agent ):
             self.__actions.pop()
             self.__myPosition = self.__lastspot
             spot = MyAI.nextForwardPosition(self)
-            self.__walls.append(spot)
-            self.__Fplace.append(spot)
+            MyAI.WallsAdded(self,spot)
             
         self.__traveledplace.append(self.__myPosition)
 
@@ -69,7 +68,7 @@ class MyAI ( Agent ):
 
         if self.__myPosition == (0,0):
             self.__timesInStart += 1
-        if self.__timesInStart >= 8:
+        if self.__timesInStart >= 4:
             return Agent.Action.CLIMB
 
         ##breeze condition
@@ -370,6 +369,21 @@ class MyAI ( Agent ):
         elif self.__myDirection == 3:
             for i in range(0,y):
                 self.__shootPlaces.append((x,i))
+
+    def WallsAdded(self,spot):
+        x = spot[0]
+        y = spot[1]
+        ##when face forward
+        if self.__myDirection == 0:
+            for i in range(5):
+                self.__walls.append((x,i))
+
+
+        ##when face right     
+        elif self.__myDirection == 1:
+            for i in range(8):
+                self.__walls.append((i,y))
+
     
     def p(self):
         print(self.__newMaps)
