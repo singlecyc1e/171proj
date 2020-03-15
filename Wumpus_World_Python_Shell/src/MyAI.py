@@ -48,16 +48,14 @@ class MyAI ( Agent ):
         # YOUR CODE BEGINS
         # ======================================================================
         print(stench, breeze, glitter, bump)
+        print(self.__shooted)
         print(self.__lastspot)
         print(self.__myPosition)
+        
         
         if (not bump) and (not stench)and (not breeze):
             if self.__myPosition not in self.__traveledplace:
                 self.__traveledplace.append(self.__myPosition)
-                
-        if (scream) and (not breeze):
-            nextmove = MyAI.nextForwardPosition(self)
-            self.__Maps[nextmove[0]][nextmove[1]] = 1000
             
         if (self.__myPosition == (0,0)) and (breeze == True):
             return Agent.Action.CLIMB
@@ -94,6 +92,9 @@ class MyAI ( Agent ):
 
         ##stench condition    
         if stench:
+            if (self.__shooted == False):
+                self.__shooted = True
+                return Agent.Action.SHOOT
             if (self.__lastspot != self.__myPosition):
                 MyAI.changeStenchValue(self)
         else:
