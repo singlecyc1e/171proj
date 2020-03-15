@@ -175,28 +175,21 @@ class MyAI ( Agent ):
         col = self.__myPosition[1]
         ##col moves
         if (col<=0):
-            if (row,col+1) not in self.__Fplace:
-                moves.append((row,col+1))
+            moves.append((row,col+1))
         elif (col>0 and col<3):
-            if (row,col+1) not in self.__Fplace:
-                moves.append((row,col+1))
-            if (row,col-1) not in self.__Fplace:
-                moves.append((row,col-1))
+            moves.append((row,col+1))
+            moves.append((row,col-1))
         elif (col>=3):
-            if (row,col-1) not in self.__Fplace:
-                moves.append((row,col-1))
+            moves.append((row,col-1))
         #row moves
         if (row<=0):
-            if (row+1,col) not in self.__Fplace:
-                moves.append((row+1,col))
+            moves.append((row+1,col))
         elif (row>0 and row<7):
-            if (row+1,col) not in self.__Fplace:
-                moves.append((row+1,col))
-            if (row-1,col) not in self.__Fplace:
-                moves.append((row-1,col))
+            moves.append((row+1,col))
+            moves.append((row-1,col))
         elif (row>=7):
-            if (row-1,col) not in self.__Fplace:
-                moves.append((row-1,col))
+            moves.append((row-1,col))
+            
         final = list()
         for i in moves:
             ##if flag breeze is false then append it
