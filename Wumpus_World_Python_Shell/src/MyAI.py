@@ -51,21 +51,12 @@ class MyAI ( Agent ):
         #print(self.__shooted)
         #print(self.__lastspot)
         #print(self.__myPosition)
-        
-        
-        if (not bump) and (not stench)and (not breeze):
-            if self.__myPosition not in self.__traveledplace:
-                self.__traveledplace.append(self.__myPosition)
             
         if (self.__myPosition == (0,0)) and (breeze == True):
             return Agent.Action.CLIMB
 
-        if (self.__myPosition == (0,0)) and (stench == True):
+        if (self.__myPosition == (0,0) )and (stench) and  (self.__shooted == True):
             return Agent.Action.CLIMB
-
-        #if (self.__myPosition == (0,0) )and (stench) and (not self.__shooted ):
-        #    self.__shooted = True
-        #    return Agent.Action.SHOOT
         
         if bump:
             self.__actions.pop()
@@ -73,8 +64,9 @@ class MyAI ( Agent ):
             spot = MyAI.nextForwardPosition(self)
             self.__walls.append(spot)
             self.__Fplace.append(spot)
-
-        self.__traveledplace.append(self.__myPosition)
+            
+        if self.__myPosition not in self.__traveledplace:
+            self.__traveledplace.append(self.__myPosition)
 
         self.__Maps[self.__myPosition[0]][self.__myPosition[1]] = (self.__Maps[self.__myPosition[0]][self.__myPosition[1]][0]-1,self.__Maps[self.__myPosition[0]][self.__myPosition[1]][1],self.__Maps[self.__myPosition[0]][self.__myPosition[1]][2])
 
