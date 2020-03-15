@@ -47,10 +47,10 @@ class MyAI ( Agent ):
         # ======================================================================
         # YOUR CODE BEGINS
         # ======================================================================
-        print(stench, breeze, glitter, bump)
-        print(self.__shooted)
-        print(self.__lastspot)
-        print(self.__myPosition)
+        #print(stench, breeze, glitter, bump)
+        #print(self.__shooted)
+        #print(self.__lastspot)
+        #print(self.__myPosition)
         
         
         if (not bump) and (not stench)and (not breeze):
