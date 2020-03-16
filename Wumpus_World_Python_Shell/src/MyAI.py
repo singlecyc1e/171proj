@@ -32,9 +32,9 @@ class MyAI (Agent):
         self.__traveledplace = [(0, 0)]
         self.__myDirection  = (1, 0)
         self.__myPosition  = (0, 0)
+        self.__wumpusdead = False
         self.__wallheight = 8
         self.__wallwidth = 5
-        self.__wumpusdead = False
         # ======================================================================
         # YOUR CODE ENDS
         # ======================================================================
@@ -124,8 +124,8 @@ class MyAI (Agent):
         return cells
 
     def Move(self, nextposition):
-        tgt_dir = (nextposition[0]-self.__myPosition[0], nextposition[1]-self.__myPosition[1])
-        if tgt_dir == self.__myDirection:
+        TargetDirection = (nextposition[0]-self.__myPosition[0], nextposition[1]-self.__myPosition[1])
+        if TargetDirection == self.__myDirection:
             if nextposition in self.__places:
                 self.__myPosition = nextposition
                 self.__places.pop()
@@ -135,7 +135,7 @@ class MyAI (Agent):
                 self.__traveledplace.append(nextposition)
             return Agent.Action.FORWARD
 
-        elif tgt_dir[0] == self.__myDirection[0] or tgt_dir[1] == self.__myDirection[1]:
+        elif TargetDirection[0] == self.__myDirection[0] or TargetDirection[1] == self.__myDirection[1]:
             if self.__myDirection[0] == 0:
                 self.__myDirection = (-1*self.__myDirection[1], 0)
                 return Agent.Action.TURN_LEFT
@@ -143,17 +143,17 @@ class MyAI (Agent):
                 self.__myDirection = (0, self.__myDirection[0])
                 return Agent.Action.TURN_LEFT
         else:
-            if self.__myDirection[0] == 0 and self.__myDirection[1] == tgt_dir[0]:
-                self.__myDirection = tgt_dir
+            if self.__myDirection[0] == 0 and self.__myDirection[1] == TargetDirection[0]:
+                self.__myDirection = TargetDirection
                 return Agent.Action.TURN_RIGHT
-            elif self.__myDirection[0] == 0 and self.__myDirection[1] != tgt_dir[0]:
-                self.__myDirection = tgt_dir
+            elif self.__myDirection[0] == 0 and self.__myDirection[1] != TargetDirection[0]:
+                self.__myDirection = TargetDirection
                 return Agent.Action.TURN_LEFT
-            elif self.__myDirection[1] == 0 and self.__myDirection[0] == tgt_dir[1]:
-                self.__myDirection = tgt_dir
+            elif self.__myDirection[1] == 0 and self.__myDirection[0] == TargetDirection[1]:
+                self.__myDirection = TargetDirection
                 return Agent.Action.TURN_LEFT
-            elif self.__myDirection[1] == 0 and self.__myDirection[0] != tgt_dir[1]:
-                self.__myDirection = tgt_dir
+            elif self.__myDirection[1] == 0 and self.__myDirection[0] != TargetDirection[1]:
+                self.__myDirection = TargetDirection
                 return Agent.Action.TURN_RIGHT
             
     def p(self):
