@@ -130,6 +130,8 @@ class MyAI (Agent):
         ##when direction change can achieve by one action
         if TargetDirection[0] != self.__myDirection[0] and TargetDirection[1] != self.__myDirection[1]:
 
+        ##turn right condition
+        if TargetDirection[0] != self.__myDirection[0] and TargetDirection[1] != self.__myDirection[1]:
             ##turn right condition
             if self.__myDirection[0] == 0 and self.__myDirection[1] == TargetDirection[0]:
                 self.__myDirection = TargetDirection
@@ -139,10 +141,10 @@ class MyAI (Agent):
                 return Agent.Action.TURN_RIGHT
 
             ##turn left condition
-            if self.__myDirection[0] == 0 and self.__myDirection[1] != TargetDirection[0]:
+            if self.__myDirection[1] == 0 and self.__myDirection[0] == TargetDirection[1]:
                 self.__myDirection = TargetDirection
                 return Agent.Action.TURN_LEFT
-            if self.__myDirection[1] == 0 and self.__myDirection[0] == TargetDirection[1]:
+            if self.__myDirection[0] == 0 and self.__myDirection[1] != TargetDirection[0]:
                 self.__myDirection = TargetDirection
                 return Agent.Action.TURN_LEFT
 
@@ -177,12 +179,13 @@ class MyAI (Agent):
                 return Agent.Action.TURN_RIGHT
 
             ##turn left condition
-            if self.__myDirection[0] == 0 and self.__myDirection[1] != TargetDirection[0]:
-                self.__myDirection = TargetDirection
-                return Agent.Action.TURN_LEFT
             if self.__myDirection[1] == 0 and self.__myDirection[0] == TargetDirection[1]:
                 self.__myDirection = TargetDirection
                 return Agent.Action.TURN_LEFT
+            if self.__myDirection[0] == 0 and self.__myDirection[1] != TargetDirection[0]:
+                self.__myDirection = TargetDirection
+                return Agent.Action.TURN_LEFT
+
             
         ##when direction change can achieve by two action
         else:
