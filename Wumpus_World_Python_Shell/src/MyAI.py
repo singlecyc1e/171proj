@@ -51,6 +51,10 @@ class MyAI (Agent):
             self.__grabbed = True
             return Agent.Action.GRAB
 
+        if stench and self.__shooted:
+            self.__shooted = False
+            return Agent.Action.SHOOT
+
         if bump:
             ##when face forward
             if self.__myDirection == (0, 1):
@@ -64,13 +68,10 @@ class MyAI (Agent):
                   
             self.__places.pop()
 
-        ##stench condition 
-        if stench and self.__shooted:
-            self.__shooted = False
-            return Agent.Action.SHOOT
-        
-        if scream or self.__wumpusdead:
+        if scream:
             self.__wumpusdead = True
+
+
         
         Possiblemoves = self.getPossibleMoves(stench,breeze)
 
