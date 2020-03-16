@@ -65,8 +65,7 @@ class MyAI (Agent):
         return cells
 
     def Move(self, nextposition):
-        loc = self.__myPosition
-        tgt_dir = (nextposition[0]-loc[0], nextposition[1]-loc[1])
+        tgt_dir = (nextposition[0]-self.__myPosition[0], nextposition[1]-self.__myPosition[1])
         if tgt_dir == self.__myDirection:
             if nextposition in self.__actions:
                 self.__myPosition = nextposition
