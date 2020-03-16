@@ -71,9 +71,8 @@ class MyAI (Agent):
         
         if scream or self.__wumpusdead:
             self.__wumpusdead = True
-            Possiblemoves = self.adjacentCellsAfter(breeze)
-        else:
-            Possiblemoves = self.getPossibleMoves(stench,breeze)
+        
+        Possiblemoves = self.getPossibleMoves(stench,breeze)
 
         
         # if grabbed, then return to start
@@ -95,8 +94,12 @@ class MyAI (Agent):
         #Return available cells around current
     def getPossibleMoves(self, stench, breeze):
         moves = list()
-        if stench or breeze:
-            return moves
+        if self.__wumpusdead:
+            if breeze:
+                return moves
+        else:
+            if stench or breeze:
+                return moves
 
         if self.__myPosition[0] > 0:
             moves.append((self.__myPosition[0]-1, self.__myPosition[1]))
@@ -113,21 +116,6 @@ class MyAI (Agent):
                 final.append(i)
                 
         return final
-
-    def adjacentCellsAfter(self, breeze):
-        cells = list()
-        if breeze:
-            return cells
-        x, y = self.__myPosition
-        if x - 1 >= 0 and (x-1, y) not in self.__traveledplace:
-            cells.append((x-1, y))
-        if x + 1 <= self.__wallwidth and ((x+1, y) not in self.__traveledplace):
-            cells.append((x+1, y))
-        if y - 1 >= 0 and (x, y-1) not in self.__traveledplace:
-            cells.append((x, y-1))
-        if y + 1 <= self.__wallheight and ((x, y+1) not in self.__traveledplace):
-            cells.append((x, y+1))
-        return cells
 
     def Move(self, nextposition):
         TargetDirection = (nextposition[0]-self.__myPosition[0], nextposition[1]-self.__myPosition[1])
