@@ -26,12 +26,11 @@ class MyAI (Agent):
         self.__grabbed = False
         self.__shooted = True
         self.__actions = list()
-        self.upBound = 10000
-        self.rightBound = 10000
-        
-        self.visited = [(0, 0)]
+        self.__traveledplace = [(0, 0)]
         self.__myDirection  = (1, 0)
         self.__myPosition  = (0, 0)
+        self.__wallheight = 10000
+        self.__wallwidth = 10000
         self.__wumpusdead = False
 
     #Return available cells around current
@@ -40,13 +39,13 @@ class MyAI (Agent):
         if stench or breeze:
             return cells
         x, y = self.__myPosition
-        if x - 1 >= 0 and (x-1, y) not in self.visited:
+        if x - 1 >= 0 and ((x-1, y) not in self.__traveledplace):
             cells.append((x-1, y))
-        if x + 1 <= self.rightBound and (x+1, y) not in self.visited:
+        if x + 1 <= self.__wallwidth and ((x+1, y) not in self.__traveledplace):
             cells.append((x+1, y))
-        if y - 1 >= 0 and (x, y-1) not in self.visited:
+        if y - 1 >= 0 and (x, y-1) not in self.__traveledplace:
             cells.append((x, y-1))
-        if y + 1 <= self.upBound and (x, y+1) not in self.visited:
+        if y + 1 <= self.__wallheight and ((x, y+1) not in self.__traveledplace):
             cells.append((x, y+1))
         return cells
 
@@ -55,29 +54,29 @@ class MyAI (Agent):
         if breeze:
             return cells
         x, y = self.__myPosition
-        if x - 1 >= 0 and (x-1, y) not in self.visited:
+        if x - 1 >= 0 and (x-1, y) not in self.__traveledplace:
             cells.append((x-1, y))
-        if x + 1 <= self.rightBound and (x+1, y) not in self.visited:
+        if x + 1 <= self.__wallwidth and ((x+1, y) not in self.__traveledplace):
             cells.append((x+1, y))
-        if y - 1 >= 0 and (x, y-1) not in self.visited:
+        if y - 1 >= 0 and (x, y-1) not in self.__traveledplace:
             cells.append((x, y-1))
-        if y + 1 <= self.upBound and (x, y+1) not in self.visited:
+        if y + 1 <= self.__wallheight and ((x, y+1) not in self.__traveledplace):
             cells.append((x, y+1))
         return cells
 
-    def toCell(self, nextmove):
+    def Move(self, nextposition):
         curr_dir = self.__myDirection
         loc = self.__myPosition
-        tgt_dir = (nextmove[0]-loc[0], nextmove[1]-loc[1])
+        tgt_dir = (nextposition[0]-loc[0], nextposition[1]-loc[1])
 
         if tgt_dir == curr_dir:
-            if nextmove in self.__actions:
-                self.__myPosition = nextmove
+            if nextposition in self.__actions:
+                self.__myPosition = nextposition
                 self.__actions.pop()
             else:
                 self.__actions.append(self.__myPosition)
-                self.__myPosition = nextmove
-                self.visited.append(nextmove)
+                self.__myPosition = nextposition
+                self.__traveledplace.append(nextposition)
             return Agent.Action.FORWARD
 
         elif tgt_dir[0] == curr_dir[0] or tgt_dir[1] == curr_dir[1]:
@@ -103,7 +102,8 @@ class MyAI (Agent):
 
     def getAction(self, stench, breeze, glitter, bump, scream):
         #print(stench, breeze, glitter, bump)
-
+        
+        # if there is gold, grab it 
         if glitter:
             self.__grabbed = True
             return Agent.Action.GRAB
@@ -113,12 +113,13 @@ class MyAI (Agent):
             curr_dir = self.__myDirection
             loc = self.__myPosition
             if curr_dir == (1, 0):
-                self.rightBound = loc[0] - 1
+                self.__wallwidth = loc[0] - 1
                 self.__myPosition = (loc[0] - 1, loc[1])
             elif curr_dir == (0, 1):
-                self.upBound = loc[1] - 1
+                self.__wallheight = loc[1] - 1
                 self.__myPosition = (loc[0], loc[1] - 1)
-        
+
+        ##stench condition 
         if stench and self.__shooted == True:
             self.__shooted = False
             return Agent.Action.SHOOT
@@ -134,14 +135,14 @@ class MyAI (Agent):
         # if grabbed, then return to start
         if self.__grabbed:
             ## if actions stack is empty, then climb out
-            if not self.__actions:
+            if self.__actions == list():
                 return Agent.Action.CLIMB
-            return self.toCell(self.__actions[-1])
+            return self.Move(self.__actions[-1])
 
         # if no adj, then return to start
         if adj_cells == list():
-            if not self.__actions:
+            if self.__actions == list():
                 return Agent.Action.CLIMB
-            return self.toCell(self.__actions[-1])
+            return self.Move(self.__actions[-1])
         
-        return self.toCell(adj_cells[0])
+        return self.Move(adj_cells[0])
