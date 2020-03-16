@@ -23,6 +23,9 @@ from Agent import Agent
 class MyAI (Agent):
 
     def __init__(self):
+        # ======================================================================
+        # YOUR CODE BEGINS
+        # ======================================================================
         self.__grabbed = False
         self.__shooted = True
         self.__actions = list()
@@ -32,8 +35,60 @@ class MyAI (Agent):
         self.__wallheight = 8
         self.__wallwidth = 5
         self.__wumpusdead = False
+        # ======================================================================
+        # YOUR CODE ENDS
+        # ======================================================================
 
-    #Return available cells around current
+
+    def getAction(self, stench, breeze, glitter, bump, scream):
+        # ======================================================================
+        # YOUR CODE BEGINS
+        # ======================================================================
+        #print(stench, breeze, glitter, bump)
+
+        if bump:
+            if self.__myDirection == (1, 0):
+                self.__myPosition = (self.__myPosition[0] - 1, self.__myPosition[1])
+                self.__wallwidth = self.__myPosition[0]              
+            if self.__myDirection == (0, 1):
+                self.__myPosition = (self.__myPosition[0], self.__myPosition[1] - 1)
+                self.__wallheight = self.__myPosition[1]
+            self.__actions.pop()
+        
+        # if there is gold, grab it 
+        if glitter:
+            self.__grabbed = True
+            return Agent.Action.GRAB
+
+        ##stench condition 
+        if stench and self.__shooted:
+            self.__shooted = False
+            return Agent.Action.SHOOT
+        
+        if scream or self.__wumpusdead:
+            self.__wumpusdead = True
+            Possiblemoves = self.adjacentCellsAfter(breeze)
+        else:
+            Possiblemoves = self.adjacentCellsBefore(stench,breeze)
+
+        
+        # if grabbed, then return to start
+        if self.__grabbed:
+            ## if actions stack is empty, then climb out
+            if self.__actions == list():
+                return Agent.Action.CLIMB
+            return self.Move(self.__actions[-1])
+
+        # if no adj, then return to start
+        if Possiblemoves == list():
+            if self.__actions == list():
+                return Agent.Action.CLIMB
+            return self.Move(self.__actions[-1])
+        
+        return self.Move(Possiblemoves[0])
+
+
+        #Return available cells around current
     def adjacentCellsBefore(self, stench, breeze):
         cells = list()
         if stench or breeze:
@@ -96,47 +151,9 @@ class MyAI (Agent):
             elif self.__myDirection[1] == 0 and self.__myDirection[0] != tgt_dir[1]:
                 self.__myDirection = tgt_dir
                 return Agent.Action.TURN_RIGHT
-
-    def getAction(self, stench, breeze, glitter, bump, scream):
-        #print(stench, breeze, glitter, bump)
-
-        if bump:
-            if self.__myDirection == (1, 0):
-                self.__myPosition = (self.__myPosition[0] - 1, self.__myPosition[1])
-                self.__wallwidth = self.__myPosition[0]              
-            if self.__myDirection == (0, 1):
-                self.__myPosition = (self.__myPosition[0], self.__myPosition[1] - 1)
-                self.__wallheight = self.__myPosition[1]
-            self.__actions.pop()
-        
-        # if there is gold, grab it 
-        if glitter:
-            self.__grabbed = True
-            return Agent.Action.GRAB
-
-        ##stench condition 
-        if stench and self.__shooted:
-            self.__shooted = False
-            return Agent.Action.SHOOT
-        
-        if scream or self.__wumpusdead:
-            self.__wumpusdead = True
-            Possiblemoves = self.adjacentCellsAfter(breeze)
-        else:
-            Possiblemoves = self.adjacentCellsBefore(stench,breeze)
-
-        
-        # if grabbed, then return to start
-        if self.__grabbed:
-            ## if actions stack is empty, then climb out
-            if self.__actions == list():
-                return Agent.Action.CLIMB
-            return self.Move(self.__actions[-1])
-
-        # if no adj, then return to start
-        if Possiblemoves == list():
-            if self.__actions == list():
-                return Agent.Action.CLIMB
-            return self.Move(self.__actions[-1])
-        
-        return self.Move(Possiblemoves[0])
+            
+    def p(self):
+        print(self.__traveledplace)
+    # ======================================================================
+    # YOUR CODE ENDS
+    # ======================================================================
