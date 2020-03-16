@@ -30,7 +30,8 @@ class MyAI (Agent):
         self.rightBound = 10000
         
         self.visited = [(0, 0)]
-        self.status = {"Direction": (1, 0), "Location": (0, 0)}
+        self.__myDirection  = (1, 0)
+        self.__myPosition  = (0, 0)
         self.__wumpusdead = False
 
     #Return available cells around current
@@ -38,7 +39,7 @@ class MyAI (Agent):
         cells = list()
         if stench or breeze:
             return cells
-        x, y = self.status["Location"]
+        x, y = self.__myPosition
         if x - 1 >= 0 and (x-1, y) not in self.visited:
             cells.append((x-1, y))
         if x + 1 <= self.rightBound and (x+1, y) not in self.visited:
@@ -53,7 +54,7 @@ class MyAI (Agent):
         cells = list()
         if breeze:
             return cells
-        x, y = self.status["Location"]
+        x, y = self.__myPosition
         if x - 1 >= 0 and (x-1, y) not in self.visited:
             cells.append((x-1, y))
         if x + 1 <= self.rightBound and (x+1, y) not in self.visited:
@@ -64,49 +65,40 @@ class MyAI (Agent):
             cells.append((x, y+1))
         return cells
 
-    #Set right bound or up bound when perceiving bump
-    def setBound(self):
-        curr_dir, loc = self.status["Direction"], self.status["Location"]
-        if curr_dir == (1, 0):
-            self.rightBound = loc[0] - 1
-            self.status["Location"] = (loc[0] - 1, loc[1])
-        elif curr_dir == (0, 1):
-            self.upBound = loc[1] - 1
-            self.status["Location"] = (loc[0], loc[1] - 1)
-
     def toCell(self, nextmove):
-        curr_dir, loc = self.status["Direction"], self.status["Location"]
+        curr_dir = self.__myDirection
+        loc = self.__myPosition
         tgt_dir = (nextmove[0]-loc[0], nextmove[1]-loc[1])
 
         if tgt_dir == curr_dir:
             if nextmove in self.__actions:
-                self.status["Location"] = nextmove
+                self.__myPosition = nextmove
                 self.__actions.pop()
             else:
-                self.__actions.append(self.status["Location"])
-                self.status["Location"] = nextmove
+                self.__actions.append(self.__myPosition)
+                self.__myPosition = nextmove
                 self.visited.append(nextmove)
             return Agent.Action.FORWARD
 
         elif tgt_dir[0] == curr_dir[0] or tgt_dir[1] == curr_dir[1]:
             if curr_dir[0] == 0:
-                self.status["Direction"] = (-1*curr_dir[1], 0)
+                self.__myDirection = (-1*curr_dir[1], 0)
                 return Agent.Action.TURN_LEFT
             elif curr_dir[1] == 0:
-                self.status["Direction"] = (0, curr_dir[0])
+                self.__myDirection = (0, curr_dir[0])
                 return Agent.Action.TURN_LEFT
         else:
             if curr_dir[0] == 0 and curr_dir[1] == tgt_dir[0]:
-                self.status["Direction"] = tgt_dir
+                self.__myDirection = tgt_dir
                 return Agent.Action.TURN_RIGHT
             elif curr_dir[0] == 0 and curr_dir[1] != tgt_dir[0]:
-                self.status["Direction"] = tgt_dir
+                self.__myDirection = tgt_dir
                 return Agent.Action.TURN_LEFT
             elif curr_dir[1] == 0 and curr_dir[0] == tgt_dir[1]:
-                self.status["Direction"] = tgt_dir
+                self.__myDirection = tgt_dir
                 return Agent.Action.TURN_LEFT
             elif curr_dir[1] == 0 and curr_dir[0] != tgt_dir[1]:
-                self.status["Direction"] = tgt_dir
+                self.__myDirection = tgt_dir
                 return Agent.Action.TURN_RIGHT
 
     def getAction(self, stench, breeze, glitter, bump, scream):
@@ -118,7 +110,14 @@ class MyAI (Agent):
 
         if bump:
             self.__actions.pop()
-            self.setBound()
+            curr_dir = self.__myDirection
+            loc = self.__myPosition
+            if curr_dir == (1, 0):
+                self.rightBound = loc[0] - 1
+                self.__myPosition = (loc[0] - 1, loc[1])
+            elif curr_dir == (0, 1):
+                self.upBound = loc[1] - 1
+                self.__myPosition = (loc[0], loc[1] - 1)
         
         if stench and self.__shooted == True:
             self.__shooted = False
