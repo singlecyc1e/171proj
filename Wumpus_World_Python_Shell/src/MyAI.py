@@ -65,11 +65,9 @@ class MyAI (Agent):
         return cells
 
     def Move(self, nextposition):
-        curr_dir = self.__myDirection
         loc = self.__myPosition
         tgt_dir = (nextposition[0]-loc[0], nextposition[1]-loc[1])
-
-        if tgt_dir == curr_dir:
+        if tgt_dir == self.__myDirection:
             if nextposition in self.__actions:
                 self.__myPosition = nextposition
                 self.__actions.pop()
@@ -79,34 +77,29 @@ class MyAI (Agent):
                 self.__traveledplace.append(nextposition)
             return Agent.Action.FORWARD
 
-        elif tgt_dir[0] == curr_dir[0] or tgt_dir[1] == curr_dir[1]:
-            if curr_dir[0] == 0:
-                self.__myDirection = (-1*curr_dir[1], 0)
+        elif tgt_dir[0] == self.__myDirection[0] or tgt_dir[1] == self.__myDirection[1]:
+            if self.__myDirection[0] == 0:
+                self.__myDirection = (-1*self.__myDirection[1], 0)
                 return Agent.Action.TURN_LEFT
-            elif curr_dir[1] == 0:
-                self.__myDirection = (0, curr_dir[0])
+            elif self.__myDirection[1] == 0:
+                self.__myDirection = (0, self.__myDirection[0])
                 return Agent.Action.TURN_LEFT
         else:
-            if curr_dir[0] == 0 and curr_dir[1] == tgt_dir[0]:
+            if self.__myDirection[0] == 0 and self.__myDirection[1] == tgt_dir[0]:
                 self.__myDirection = tgt_dir
                 return Agent.Action.TURN_RIGHT
-            elif curr_dir[0] == 0 and curr_dir[1] != tgt_dir[0]:
+            elif self.__myDirection[0] == 0 and self.__myDirection[1] != tgt_dir[0]:
                 self.__myDirection = tgt_dir
                 return Agent.Action.TURN_LEFT
-            elif curr_dir[1] == 0 and curr_dir[0] == tgt_dir[1]:
+            elif self.__myDirection[1] == 0 and self.__myDirection[0] == tgt_dir[1]:
                 self.__myDirection = tgt_dir
                 return Agent.Action.TURN_LEFT
-            elif curr_dir[1] == 0 and curr_dir[0] != tgt_dir[1]:
+            elif self.__myDirection[1] == 0 and self.__myDirection[0] != tgt_dir[1]:
                 self.__myDirection = tgt_dir
                 return Agent.Action.TURN_RIGHT
 
     def getAction(self, stench, breeze, glitter, bump, scream):
         #print(stench, breeze, glitter, bump)
-        
-        # if there is gold, grab it 
-        if glitter:
-            self.__grabbed = True
-            return Agent.Action.GRAB
 
         if bump:
             if self.__myDirection == (1, 0):
@@ -116,20 +109,24 @@ class MyAI (Agent):
                 self.__myPosition = (self.__myPosition[0], self.__myPosition[1] - 1)
                 self.__wallheight = self.__myPosition[1]
             self.__actions.pop()
+        
+        # if there is gold, grab it 
+        if glitter:
+            self.__grabbed = True
+            return Agent.Action.GRAB
 
         ##stench condition 
-        if stench and self.__shooted == True:
+        if stench and self.__shooted:
             self.__shooted = False
             return Agent.Action.SHOOT
         
         if scream or self.__wumpusdead:
             self.__wumpusdead = True
-            adj_cells = self.adjacentCellsAfter(breeze)
-        
+            Possiblemoves = self.adjacentCellsAfter(breeze)
         else:
-            adj_cells = self.adjacentCellsBefore(stench,breeze)
+            Possiblemoves = self.adjacentCellsBefore(stench,breeze)
 
-
+        
         # if grabbed, then return to start
         if self.__grabbed:
             ## if actions stack is empty, then climb out
@@ -138,9 +135,9 @@ class MyAI (Agent):
             return self.Move(self.__actions[-1])
 
         # if no adj, then return to start
-        if adj_cells == list():
+        if Possiblemoves == list():
             if self.__actions == list():
                 return Agent.Action.CLIMB
             return self.Move(self.__actions[-1])
         
-        return self.Move(adj_cells[0])
+        return self.Move(Possiblemoves[0])
