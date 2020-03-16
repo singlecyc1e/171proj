@@ -26,7 +26,7 @@ class MyAI (Agent):
         self.__grabbed = False
         self.update = False
         self.tgt_down = False
-        self.hasArrow = True
+        self.__shooted = True
         self.upBound = 10000
         self.rightBound = 10000
         self.stack = []
@@ -111,6 +111,7 @@ class MyAI (Agent):
                 return Agent.Action.TURN_RIGHT
 
     def getAction(self, stench, breeze, glitter, bump, scream):
+        #print(stench, breeze, glitter, bump)
 
         if glitter:
             self.__grabbed = True
@@ -120,8 +121,8 @@ class MyAI (Agent):
             self.stack.pop()
             self.setBound()
         
-        if stench and self.hasArrow == True and self.__grabbed == False:
-            self.hasArrow = False
+        if stench and self.__shooted == True:
+            self.__shooted = False
             return Agent.Action.SHOOT
         
         if scream or self.tgt_down:
@@ -131,7 +132,16 @@ class MyAI (Agent):
         else:
             adj_cells = self.adjacentCellsBefore(stench,breeze)
 
-        if self.__grabbed or not adj_cells:
+
+        # if grabbed, then return to start
+        if self.__grabbed:
+            ## if actions stack is empty, then climb out
+            if not self.stack:
+                return Agent.Action.CLIMB
+            return self.toCell(self.stack[-1])
+
+        # if no adj, then return to start
+        if adj_cells == list():
             if not self.stack:
                 return Agent.Action.CLIMB
             return self.toCell(self.stack[-1])
