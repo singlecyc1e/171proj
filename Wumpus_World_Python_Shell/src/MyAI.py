@@ -27,13 +27,13 @@ class MyAI (Agent):
         # YOUR CODE BEGINS
         # ======================================================================
         self.__grabbed = False
-        self.__shooted = True
+        self.__shooted = False
         self.__myDirection  = (1, 0)
         self.__myPosition  = (0, 0)
         self.__wumpusdead = False
         self.__wallheight = 9
         self.__wallwidth = 6
-        self.__places = list()
+        self.__placesStack = list()
         self.__traveledplace = [(0, 0)]
         # ======================================================================
         # YOUR CODE ENDS
@@ -51,8 +51,8 @@ class MyAI (Agent):
             self.__grabbed = True
             return Agent.Action.GRAB
 
-        if stench and self.__shooted:
-            self.__shooted = False
+        if stench and not self.__shooted:
+            self.__shooted = True
             return Agent.Action.SHOOT
 
         if bump:
@@ -66,30 +66,32 @@ class MyAI (Agent):
                 self.__myPosition = (self.__myPosition[0]-1, self.__myPosition[1])
                 self.__wallwidth = self.__myPosition[0]
                   
-            self.__places.pop()
+            self.__placesStack.pop()
 
         if scream:
             self.__wumpusdead = True
-
-
         
         Possiblemoves = self.getPossibleMoves(stench,breeze)
-
         
         # if grabbed, then return to start
         if self.__grabbed:
             ## if place stack is empty, then climb out
-            if self.__places == list():
+            if self.__placesStack == list():
                 return Agent.Action.CLIMB
-            return self.Move(self.__places[-1])
+            
+            Action = self.Move(self.__placesStack[-1])
+            return Action
 
         # if no adj, then return to start
         if Possiblemoves == list():
-            if self.__places == list():
+            if self.__placesStack == list():
                 return Agent.Action.CLIMB
-            return self.Move(self.__places[-1])
+            
+            Action = self.Move(self.__placesStack[-1])
+            return Action
         
-        return self.Move(Possiblemoves[0])
+        Action = self.Move(Possiblemoves[0])
+        return Action
 
 
         #Return available cells around current
@@ -117,17 +119,30 @@ class MyAI (Agent):
                 final.append(i)
                 
         return final
+    
+    def Back(self, nextposition):
+        TargetDirection = (nextposition[0]-self.__myPosition[0], nextposition[1]-self.__myPosition[1])
+        if TargetDirection == self.__myDirection:
+            self.__myPosition = nextposition
+            self.__placesStack.pop()
+            
+            return Agent.Action.FORWARD
+
+        
 
     def Move(self, nextposition):
         TargetDirection = (nextposition[0]-self.__myPosition[0], nextposition[1]-self.__myPosition[1])
+        
         if TargetDirection == self.__myDirection:
-            if nextposition in self.__places:
-                self.__myPosition = nextposition
-                self.__places.pop()
-            else:
-                self.__places.append(self.__myPosition)
-                self.__myPosition = nextposition
+            if nextposition not in self.__placesStack:
+                self.__placesStack.append(self.__myPosition)
                 self.__traveledplace.append(nextposition)
+                self.__myPosition = nextposition           
+            
+            if nextposition in self.__placesStack:
+                self.__myPosition = nextposition
+                self.__placesStack.pop()
+            
             return Agent.Action.FORWARD
 
         elif TargetDirection[0] == self.__myDirection[0] or TargetDirection[1] == self.__myDirection[1]:
