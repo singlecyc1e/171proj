@@ -79,7 +79,7 @@ class MyAI (Agent):
             if self.__placesStack == list():
                 return Agent.Action.CLIMB
             
-            Action = self.Move(self.__placesStack[-1])
+            Action = self.Back(self.__placesStack[-1])
             return Action
 
         # if no adj, then return to start
@@ -87,7 +87,7 @@ class MyAI (Agent):
             if self.__placesStack == list():
                 return Agent.Action.CLIMB
             
-            Action = self.Move(self.__placesStack[-1])
+            Action = self.Back(self.__placesStack[-1])
             return Action
         
         Action = self.Move(Possiblemoves[0])
@@ -125,24 +125,37 @@ class MyAI (Agent):
         if TargetDirection == self.__myDirection:
             self.__myPosition = nextposition
             self.__placesStack.pop()
-            
             return Agent.Action.FORWARD
-
+        
+        elif TargetDirection[0] == self.__myDirection[0] or TargetDirection[1] == self.__myDirection[1]:
+            if self.__myDirection[0] == 0:
+                self.__myDirection = (-1*self.__myDirection[1], 0)
+                return Agent.Action.TURN_LEFT
+            elif self.__myDirection[1] == 0:
+                self.__myDirection = (0, self.__myDirection[0])
+                return Agent.Action.TURN_LEFT
+        else:
+            if self.__myDirection[0] == 0 and self.__myDirection[1] == TargetDirection[0]:
+                self.__myDirection = TargetDirection
+                return Agent.Action.TURN_RIGHT
+            elif self.__myDirection[0] == 0 and self.__myDirection[1] != TargetDirection[0]:
+                self.__myDirection = TargetDirection
+                return Agent.Action.TURN_LEFT
+            elif self.__myDirection[1] == 0 and self.__myDirection[0] == TargetDirection[1]:
+                self.__myDirection = TargetDirection
+                return Agent.Action.TURN_LEFT
+            elif self.__myDirection[1] == 0 and self.__myDirection[0] != TargetDirection[1]:
+                self.__myDirection = TargetDirection
+                return Agent.Action.TURN_RIGHT
         
 
     def Move(self, nextposition):
         TargetDirection = (nextposition[0]-self.__myPosition[0], nextposition[1]-self.__myPosition[1])
         
         if TargetDirection == self.__myDirection:
-            if nextposition not in self.__placesStack:
-                self.__placesStack.append(self.__myPosition)
-                self.__traveledplace.append(nextposition)
-                self.__myPosition = nextposition           
-            
-            if nextposition in self.__placesStack:
-                self.__myPosition = nextposition
-                self.__placesStack.pop()
-            
+            self.__placesStack.append(self.__myPosition)
+            self.__traveledplace.append(nextposition)
+            self.__myPosition = nextposition                    
             return Agent.Action.FORWARD
 
         elif TargetDirection[0] == self.__myDirection[0] or TargetDirection[1] == self.__myDirection[1]:
