@@ -147,7 +147,7 @@ class MyAI (Agent):
 
             
         ##when direction change can achieve by two action
-        if TargetDirection[0] == self.__myDirection[0] or TargetDirection[1] == self.__myDirection[1]:
+        else:
             if self.__myDirection[0] == 0:
                 self.__myDirection = (-1*self.__myDirection[1], 0)
                 return Agent.Action.TURN_LEFT
@@ -184,7 +184,7 @@ class MyAI (Agent):
                 return Agent.Action.TURN_LEFT
             
         ##when direction change can achieve by two action
-        if TargetDirection[0] == self.__myDirection[0] or TargetDirection[1] == self.__myDirection[1]:
+        else:
             if self.__myDirection[0] == 0:
                 self.__myDirection = (-1*self.__myDirection[1], 0)
                 return Agent.Action.TURN_LEFT
