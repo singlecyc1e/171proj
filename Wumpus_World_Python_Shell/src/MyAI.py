@@ -46,6 +46,13 @@ class MyAI (Agent):
         # ======================================================================
         #print(stench, breeze, glitter, bump)
 
+
+        
+        # if there is gold, grab it 
+        if glitter:
+            self.__grabbed = True
+            return Agent.Action.GRAB
+
         if bump:
             if self.__myDirection == (1, 0):
                 self.__myPosition = (self.__myPosition[0] - 1, self.__myPosition[1])
@@ -54,11 +61,6 @@ class MyAI (Agent):
                 self.__myPosition = (self.__myPosition[0], self.__myPosition[1] - 1)
                 self.__wallheight = self.__myPosition[1]
             self.__actions.pop()
-        
-        # if there is gold, grab it 
-        if glitter:
-            self.__grabbed = True
-            return Agent.Action.GRAB
 
         ##stench condition 
         if stench and self.__shooted:
