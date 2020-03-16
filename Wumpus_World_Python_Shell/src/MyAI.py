@@ -127,7 +127,7 @@ class MyAI (Agent):
             self.__placesStack.pop()
             return Agent.Action.FORWARD
         ##when direction change can achieve by one action
-        if TargetDirection[0] == self.__myDirection[0] and TargetDirection[1] == self.__myDirection[1]:
+        if TargetDirection[0] != self.__myDirection[0] and TargetDirection[1] != self.__myDirection[1]:
 
             ##turn right condition
             if self.__myDirection[0] == 0 and self.__myDirection[1] == TargetDirection[0]:
@@ -166,7 +166,7 @@ class MyAI (Agent):
             return Agent.Action.FORWARD
 
         ##when direction change can achieve by one action
-        if TargetDirection[0] == self.__myDirection[0] and TargetDirection[1] == self.__myDirection[1]:
+        if TargetDirection[0] != self.__myDirection[0] and TargetDirection[1] != self.__myDirection[1]:
             ##turn right condition
             if self.__myDirection[0] == 0 and self.__myDirection[1] == TargetDirection[0]:
                 self.__myDirection = TargetDirection
