@@ -28,7 +28,7 @@ class MyAI (Agent):
         # ======================================================================
         self.__grabbed = False
         self.__shooted = True
-        self.__actions = list()
+        self.__places = list()
         self.__traveledplace = [(0, 0)]
         self.__myDirection  = (1, 0)
         self.__myPosition  = (0, 0)
@@ -60,7 +60,7 @@ class MyAI (Agent):
             if self.__myDirection == (0, 1):
                 self.__myPosition = (self.__myPosition[0], self.__myPosition[1] - 1)
                 self.__wallheight = self.__myPosition[1]
-            self.__actions.pop()
+            self.__places.pop()
 
         ##stench condition 
         if stench and self.__shooted:
@@ -76,16 +76,16 @@ class MyAI (Agent):
         
         # if grabbed, then return to start
         if self.__grabbed:
-            ## if actions stack is empty, then climb out
-            if self.__actions == list():
+            ## if place stack is empty, then climb out
+            if self.__places == list():
                 return Agent.Action.CLIMB
-            return self.Move(self.__actions[-1])
+            return self.Move(self.__places[-1])
 
         # if no adj, then return to start
         if Possiblemoves == list():
-            if self.__actions == list():
+            if self.__places == list():
                 return Agent.Action.CLIMB
-            return self.Move(self.__actions[-1])
+            return self.Move(self.__places[-1])
         
         return self.Move(Possiblemoves[0])
 
@@ -124,11 +124,11 @@ class MyAI (Agent):
     def Move(self, nextposition):
         tgt_dir = (nextposition[0]-self.__myPosition[0], nextposition[1]-self.__myPosition[1])
         if tgt_dir == self.__myDirection:
-            if nextposition in self.__actions:
+            if nextposition in self.__places:
                 self.__myPosition = nextposition
-                self.__actions.pop()
+                self.__places.pop()
             else:
-                self.__actions.append(self.__myPosition)
+                self.__places.append(self.__myPosition)
                 self.__myPosition = nextposition
                 self.__traveledplace.append(nextposition)
             return Agent.Action.FORWARD
