@@ -154,7 +154,7 @@ class MyAI (Agent):
             elif self.__myDirection[1] == 0:
                 self.__myDirection = (0, self.__myDirection[0])
 
-            return Agent.Action.TURN_RIGHT
+            return Agent.Action.TURN_LEFT
         
 
     def Move(self, nextposition):
@@ -191,7 +191,7 @@ class MyAI (Agent):
             elif self.__myDirection[1] == 0:
                 self.__myDirection = (0, self.__myDirection[0])
 
-            return Agent.Action.TURN_RIGHT
+            return Agent.Action.TURN_LEFT
         
             
     def p(self):
