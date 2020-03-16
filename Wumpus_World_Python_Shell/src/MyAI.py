@@ -73,7 +73,7 @@ class MyAI (Agent):
             self.__wumpusdead = True
             Possiblemoves = self.adjacentCellsAfter(breeze)
         else:
-            Possiblemoves = self.adjacentCellsBefore(stench,breeze)
+            Possiblemoves = self.getPossibleMoves(stench,breeze)
 
         
         # if grabbed, then return to start
@@ -93,20 +93,26 @@ class MyAI (Agent):
 
 
         #Return available cells around current
-    def adjacentCellsBefore(self, stench, breeze):
-        cells = list()
+    def getPossibleMoves(self, stench, breeze):
+        moves = list()
         if stench or breeze:
             return cells
-        x, y = self.__myPosition
-        if x - 1 >= 0 and ((x-1, y) not in self.__traveledplace):
-            cells.append((x-1, y))
-        if x + 1 <= self.__wallwidth and ((x+1, y) not in self.__traveledplace):
-            cells.append((x+1, y))
-        if y - 1 >= 0 and (x, y-1) not in self.__traveledplace:
-            cells.append((x, y-1))
-        if y + 1 <= self.__wallheight and ((x, y+1) not in self.__traveledplace):
-            cells.append((x, y+1))
-        return cells
+
+        if self.__myPosition[0] > 0:
+            moves.append((self.__myPosition[0]-1, self.__myPosition[1]))
+        if self.__myPosition[0] < self.__wallwidth:
+            moves.append((self.__myPosition[0]+1, self.__myPosition[1]))
+        if self.__myPosition[1] > 0:
+            moves.append((self.__myPosition[0], self.__myPosition[1]-1))
+        if self.__myPosition[1] < self.__wallheight:
+            moves.append((self.__myPosition[0], self.__myPosition[1]+1))
+            
+        final  = list()
+        for i in cells:
+            if i not in self.__traveledplace:
+                final.append(i)
+                
+        return final
 
     def adjacentCellsAfter(self, breeze):
         cells = list()
