@@ -31,8 +31,8 @@ class MyAI (Agent):
         self.__myDirection  = (1, 0) ## self.__myDirection  = 1 
         self.__myPosition  = (0, 0)
         self.__wumpusdead = False
-        self.__wallheight = 9
-        self.__wallwidth = 6
+        self.__wallheight = 8
+        self.__wallwidth = 5
         self.__placesStack = list()
         self.__traveledplace = [(0, 0)]
         # ======================================================================
