@@ -28,13 +28,13 @@ class MyAI (Agent):
         # ======================================================================
         self.__grabbed = False
         self.__shooted = True
-        self.__places = list()
-        self.__traveledplace = [(0, 0)]
         self.__myDirection  = (1, 0)
         self.__myPosition  = (0, 0)
         self.__wumpusdead = False
         self.__wallheight = 10
         self.__wallwidth = 10
+        self.__places = list()
+        self.__traveledplace = [(0, 0)]
         # ======================================================================
         # YOUR CODE ENDS
         # ======================================================================
@@ -45,8 +45,6 @@ class MyAI (Agent):
         # YOUR CODE BEGINS
         # ======================================================================
         #print(stench, breeze, glitter, bump)
-
-
         
         # if there is gold, grab it 
         if glitter:
@@ -54,15 +52,17 @@ class MyAI (Agent):
             return Agent.Action.GRAB
 
         if bump:
+            ##when face forward
+            if self.__myDirection == (0, 1):
+                self.__myPosition = (self.__myPosition[0], self.__myPosition[1]-1)
+                self.__wallheight = self.__myPosition[1]
+                
+            ##when face right
+            if self.__myDirection == (1, 0):
+                self.__myPosition = (self.__myPosition[0]-1, self.__myPosition[1])
+                self.__wallwidth = self.__myPosition[0]
+                  
             self.__places.pop()
-            curr_dir = self.__myDirection
-            loc = self.__myPosition
-            if curr_dir == (1, 0):
-                self.__wallwidth = loc[0] - 1
-                self.__myPosition = (loc[0] - 1, loc[1])
-            elif curr_dir == (0, 1):
-                self.__wallheight = loc[1] - 1
-                self.__myPosition = (loc[0], loc[1] - 1)
 
         ##stench condition 
         if stench and self.__shooted:
