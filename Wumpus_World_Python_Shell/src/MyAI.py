@@ -29,8 +29,8 @@ class MyAI (Agent):
         self.__traveledplace = [(0, 0)]
         self.__myDirection  = (1, 0)
         self.__myPosition  = (0, 0)
-        self.__wallheight = 10000
-        self.__wallwidth = 10000
+        self.__wallheight = 8
+        self.__wallwidth = 5
         self.__wumpusdead = False
 
     #Return available cells around current
@@ -109,15 +109,13 @@ class MyAI (Agent):
             return Agent.Action.GRAB
 
         if bump:
+            if self.__myDirection == (1, 0):
+                self.__myPosition = (self.__myPosition[0] - 1, self.__myPosition[1])
+                self.__wallwidth = self.__myPosition[0]              
+            if self.__myDirection == (0, 1):
+                self.__myPosition = (self.__myPosition[0], self.__myPosition[1] - 1)
+                self.__wallheight = self.__myPosition[1]
             self.__actions.pop()
-            curr_dir = self.__myDirection
-            loc = self.__myPosition
-            if curr_dir == (1, 0):
-                self.__wallwidth = loc[0] - 1
-                self.__myPosition = (loc[0] - 1, loc[1])
-            elif curr_dir == (0, 1):
-                self.__wallheight = loc[1] - 1
-                self.__myPosition = (loc[0], loc[1] - 1)
 
         ##stench condition 
         if stench and self.__shooted == True:
