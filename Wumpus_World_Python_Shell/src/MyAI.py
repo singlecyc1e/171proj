@@ -96,7 +96,7 @@ class MyAI (Agent):
     def getPossibleMoves(self, stench, breeze):
         moves = list()
         if stench or breeze:
-            return cells
+            return moves
 
         if self.__myPosition[0] > 0:
             moves.append((self.__myPosition[0]-1, self.__myPosition[1]))
@@ -108,7 +108,7 @@ class MyAI (Agent):
             moves.append((self.__myPosition[0], self.__myPosition[1]+1))
             
         final  = list()
-        for i in cells:
+        for i in moves:
             if i not in self.__traveledplace:
                 final.append(i)
                 
