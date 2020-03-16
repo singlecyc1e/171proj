@@ -33,8 +33,8 @@ class MyAI (Agent):
         self.__myDirection  = (1, 0)
         self.__myPosition  = (0, 0)
         self.__wumpusdead = False
-        self.__wallheight = 8
-        self.__wallwidth = 5
+        self.__wallheight = 1000
+        self.__wallwidth = 1000
         # ======================================================================
         # YOUR CODE ENDS
         # ======================================================================
