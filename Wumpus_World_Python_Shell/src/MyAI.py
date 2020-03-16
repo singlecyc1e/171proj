@@ -24,11 +24,11 @@ class MyAI (Agent):
 
     def __init__(self):
         self.__grabbed = False
-        self.update = False
         self.__shooted = True
+        self.__actions = list()
         self.upBound = 10000
         self.rightBound = 10000
-        self.stack = []
+        
         self.visited = [(0, 0)]
         self.status = {"Direction": (1, 0), "Location": (0, 0)}
         self.__wumpusdead = False
@@ -74,18 +74,18 @@ class MyAI (Agent):
             self.upBound = loc[1] - 1
             self.status["Location"] = (loc[0], loc[1] - 1)
 
-    def toCell(self, tgt: tuple):
+    def toCell(self, nextmove):
         curr_dir, loc = self.status["Direction"], self.status["Location"]
-        tgt_dir = (tgt[0]-loc[0], tgt[1]-loc[1])
+        tgt_dir = (nextmove[0]-loc[0], nextmove[1]-loc[1])
 
         if tgt_dir == curr_dir:
-            if tgt in self.stack:
-                self.status["Location"] = tgt
-                self.stack.pop()
+            if nextmove in self.__actions:
+                self.status["Location"] = nextmove
+                self.__actions.pop()
             else:
-                self.stack.append(self.status["Location"])
-                self.status["Location"] = tgt
-                self.visited.append(tgt)
+                self.__actions.append(self.status["Location"])
+                self.status["Location"] = nextmove
+                self.visited.append(nextmove)
             return Agent.Action.FORWARD
 
         elif tgt_dir[0] == curr_dir[0] or tgt_dir[1] == curr_dir[1]:
@@ -117,7 +117,7 @@ class MyAI (Agent):
             return Agent.Action.GRAB
 
         if bump:
-            self.stack.pop()
+            self.__actions.pop()
             self.setBound()
         
         if stench and self.__shooted == True:
@@ -135,14 +135,14 @@ class MyAI (Agent):
         # if grabbed, then return to start
         if self.__grabbed:
             ## if actions stack is empty, then climb out
-            if not self.stack:
+            if not self.__actions:
                 return Agent.Action.CLIMB
-            return self.toCell(self.stack[-1])
+            return self.toCell(self.__actions[-1])
 
         # if no adj, then return to start
         if adj_cells == list():
-            if not self.stack:
+            if not self.__actions:
                 return Agent.Action.CLIMB
-            return self.toCell(self.stack[-1])
+            return self.toCell(self.__actions[-1])
         
         return self.toCell(adj_cells[0])
