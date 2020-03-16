@@ -126,6 +126,7 @@ class MyAI (Agent):
             self.__myPosition = nextposition
             self.__placesStack.pop()
             return Agent.Action.FORWARD
+        
         ##when direction change can achieve by one action
         if TargetDirection[0] != self.__myDirection[0] and TargetDirection[1] != self.__myDirection[1]:
 
@@ -149,11 +150,11 @@ class MyAI (Agent):
         ##when direction change can achieve by two action
         else:
             if self.__myDirection[0] == 0:
-                self.__myDirection = (-1*self.__myDirection[1], 0)
-                return Agent.Action.TURN_LEFT
+                self.__myDirection = (self.__myDirection[1] * -1, 0)
             elif self.__myDirection[1] == 0:
                 self.__myDirection = (0, self.__myDirection[0])
-                return Agent.Action.TURN_LEFT
+
+            return Agent.Action.TURN_LEFT
         
 
     def Move(self, nextposition):
@@ -186,11 +187,11 @@ class MyAI (Agent):
         ##when direction change can achieve by two action
         else:
             if self.__myDirection[0] == 0:
-                self.__myDirection = (-1*self.__myDirection[1], 0)
-                return Agent.Action.TURN_LEFT
+                self.__myDirection = (self.__myDirection[1] * -1, 0)
             elif self.__myDirection[1] == 0:
                 self.__myDirection = (0, self.__myDirection[0])
-                return Agent.Action.TURN_LEFT
+
+            return Agent.Action.TURN_LEFT
         
             
     def p(self):
