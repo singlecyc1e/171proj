@@ -28,7 +28,7 @@ class MyAI (Agent):
         # ======================================================================
         self.__grabbed = False
         self.__shooted = False
-        self.__myDirection  = (1, 0)
+        self.__myDirection  = (1, 0) ## self.__myDirection  = 1 
         self.__myPosition  = (0, 0)
         self.__wumpusdead = False
         self.__wallheight = 9
@@ -57,12 +57,12 @@ class MyAI (Agent):
 
         if bump:
             ##when face forward
-            if self.__myDirection == (0, 1):
+            if self.__myDirection == (0, 1): ##self.__myDirection == 0
                 self.__myPosition = (self.__myPosition[0], self.__myPosition[1]-1)
                 self.__wallheight = self.__myPosition[1]
                 
             ##when face right
-            if self.__myDirection == (1, 0):
+            if self.__myDirection == (1, 0): ##self.__myDirection == 1
                 self.__myPosition = (self.__myPosition[0]-1, self.__myPosition[1])
                 self.__wallwidth = self.__myPosition[0]
                   
@@ -126,27 +126,34 @@ class MyAI (Agent):
             self.__myPosition = nextposition
             self.__placesStack.pop()
             return Agent.Action.FORWARD
-        
-        elif TargetDirection[0] == self.__myDirection[0] or TargetDirection[1] == self.__myDirection[1]:
+        ##when direction change can achieve by one action
+        if TargetDirection[0] == self.__myDirection[0] and TargetDirection[1] == self.__myDirection[1]:
+
+            ##turn right condition
+            if self.__myDirection[0] == 0 and self.__myDirection[1] == TargetDirection[0]:
+                self.__myDirection = TargetDirection
+                return Agent.Action.TURN_RIGHT
+            if self.__myDirection[1] == 0 and self.__myDirection[0] != TargetDirection[1]:
+                self.__myDirection = TargetDirection
+                return Agent.Action.TURN_RIGHT
+
+            ##turn left condition
+            if self.__myDirection[0] == 0 and self.__myDirection[1] != TargetDirection[0]:
+                self.__myDirection = TargetDirection
+                return Agent.Action.TURN_LEFT
+            if self.__myDirection[1] == 0 and self.__myDirection[0] == TargetDirection[1]:
+                self.__myDirection = TargetDirection
+                return Agent.Action.TURN_LEFT
+
+            
+        ##when direction change can achieve by two action
+        if TargetDirection[0] == self.__myDirection[0] or TargetDirection[1] == self.__myDirection[1]:
             if self.__myDirection[0] == 0:
                 self.__myDirection = (-1*self.__myDirection[1], 0)
                 return Agent.Action.TURN_LEFT
             elif self.__myDirection[1] == 0:
                 self.__myDirection = (0, self.__myDirection[0])
                 return Agent.Action.TURN_LEFT
-        else:
-            if self.__myDirection[0] == 0 and self.__myDirection[1] == TargetDirection[0]:
-                self.__myDirection = TargetDirection
-                return Agent.Action.TURN_RIGHT
-            elif self.__myDirection[0] == 0 and self.__myDirection[1] != TargetDirection[0]:
-                self.__myDirection = TargetDirection
-                return Agent.Action.TURN_LEFT
-            elif self.__myDirection[1] == 0 and self.__myDirection[0] == TargetDirection[1]:
-                self.__myDirection = TargetDirection
-                return Agent.Action.TURN_LEFT
-            elif self.__myDirection[1] == 0 and self.__myDirection[0] != TargetDirection[1]:
-                self.__myDirection = TargetDirection
-                return Agent.Action.TURN_RIGHT
         
 
     def Move(self, nextposition):
@@ -158,26 +165,33 @@ class MyAI (Agent):
             self.__myPosition = nextposition                    
             return Agent.Action.FORWARD
 
-        elif TargetDirection[0] == self.__myDirection[0] or TargetDirection[1] == self.__myDirection[1]:
+        ##when direction change can achieve by one action
+        if TargetDirection[0] == self.__myDirection[0] and TargetDirection[1] == self.__myDirection[1]:
+            ##turn right condition
+            if self.__myDirection[0] == 0 and self.__myDirection[1] == TargetDirection[0]:
+                self.__myDirection = TargetDirection
+                return Agent.Action.TURN_RIGHT
+            if self.__myDirection[1] == 0 and self.__myDirection[0] != TargetDirection[1]:
+                self.__myDirection = TargetDirection
+                return Agent.Action.TURN_RIGHT
+
+            ##turn left condition
+            if self.__myDirection[0] == 0 and self.__myDirection[1] != TargetDirection[0]:
+                self.__myDirection = TargetDirection
+                return Agent.Action.TURN_LEFT
+            if self.__myDirection[1] == 0 and self.__myDirection[0] == TargetDirection[1]:
+                self.__myDirection = TargetDirection
+                return Agent.Action.TURN_LEFT
+            
+        ##when direction change can achieve by two action
+        if TargetDirection[0] == self.__myDirection[0] or TargetDirection[1] == self.__myDirection[1]:
             if self.__myDirection[0] == 0:
                 self.__myDirection = (-1*self.__myDirection[1], 0)
                 return Agent.Action.TURN_LEFT
             elif self.__myDirection[1] == 0:
                 self.__myDirection = (0, self.__myDirection[0])
                 return Agent.Action.TURN_LEFT
-        else:
-            if self.__myDirection[0] == 0 and self.__myDirection[1] == TargetDirection[0]:
-                self.__myDirection = TargetDirection
-                return Agent.Action.TURN_RIGHT
-            elif self.__myDirection[0] == 0 and self.__myDirection[1] != TargetDirection[0]:
-                self.__myDirection = TargetDirection
-                return Agent.Action.TURN_LEFT
-            elif self.__myDirection[1] == 0 and self.__myDirection[0] == TargetDirection[1]:
-                self.__myDirection = TargetDirection
-                return Agent.Action.TURN_LEFT
-            elif self.__myDirection[1] == 0 and self.__myDirection[0] != TargetDirection[1]:
-                self.__myDirection = TargetDirection
-                return Agent.Action.TURN_RIGHT
+        
             
     def p(self):
         print(self.__traveledplace)
